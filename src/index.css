@@ -1,0 +1,487 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 215 25% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 12%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 215 20% 94%;
+    --secondary-foreground: 215 25% 20%;
+
+    --muted: 215 15% 94%;
+    --muted-foreground: 215 10% 46%;
+
+    --accent: 172 66% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 215 20% 90%;
+    --input: 215 20% 90%;
+    --ring: 217 91% 60%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 215 28% 8%;
+    --foreground: 210 20% 95%;
+
+    --card: 215 25% 12%;
+    --card-foreground: 210 20% 95%;
+
+    --popover: 215 25% 12%;
+    --popover-foreground: 210 20% 95%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 215 20% 18%;
+    --secondary-foreground: 210 20% 90%;
+
+    --muted: 215 20% 18%;
+    --muted-foreground: 215 15% 60%;
+
+    --accent: 172 66% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 215 20% 20%;
+    --input: 215 20% 20%;
+    --ring: 217 91% 60%;
+
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-overflow-scrolling: touch;
+    /* overscroll-behavior: none; */
+  }
+
+  html,
+  body {
+    overflow-y: auto;
+    height: 100%;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  /* PWA safe area */
+  html {
+    padding: 0;
+  }
+}
+
+@layer utilities {
+  /* Customer-scoped theme overrides: make existing blue-* utilities follow --primary */
+  .customer-theme {
+    /* text */
+  }
+
+  .customer-theme .text-blue-600 { color: hsl(var(--primary)) !important; }
+  .customer-theme .text-blue-700 { color: hsl(var(--primary)) !important; }
+  .customer-theme .text-blue-400 { color: hsl(var(--primary) / 0.85) !important; }
+
+  /* backgrounds */
+  .customer-theme .bg-blue-600 { background-color: hsl(var(--primary)) !important; }
+  .customer-theme .bg-blue-700 { background-color: hsl(var(--primary)) !important; }
+  .customer-theme .bg-blue-50 { background-color: hsl(var(--primary) / 0.08) !important; }
+  .customer-theme .bg-blue-100 { background-color: hsl(var(--primary) / 0.12) !important; }
+  .customer-theme .bg-blue-500\/10 { background-color: hsl(var(--primary) / 0.1) !important; }
+
+  /* borders and rings */
+  .customer-theme .border-blue-500 { border-color: hsl(var(--primary)) !important; }
+  .customer-theme .ring-blue-500\/20 { box-shadow: 0 0 0 4px hsl(var(--primary) / 0.12) !important; }
+
+  /* shadows */
+  .customer-theme .shadow-blue-600\/20 { box-shadow: 0 8px 30px hsl(var(--primary) / 0.18) !important; }
+
+  /* hover helpers: use a slight brightness change to emulate darker hover */
+  .customer-theme .hover\:bg-blue-700:hover { filter: brightness(0.88) !important; }
+  .customer-theme .hover\:text-blue-600:hover { color: hsl(var(--primary)) !important; }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+    background-color: var(--muted-foreground);
+  }
+
+  /* Safe area */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+  }
+
+  /* Zigzag edge for receipt */
+  .zigzag-bg {
+    background: linear-gradient(-45deg, #f3f4f6 8px, transparent 0), linear-gradient(45deg, #f3f4f6 8px, transparent 0);
+    background-position: left-bottom;
+    background-repeat: repeat-x;
+    background-size: 16px 16px;
+  }
+
+  .dark .zigzag-bg-dark {
+    background: linear-gradient(-45deg, #030712 8px, transparent 0), linear-gradient(45deg, #030712 8px, transparent 0);
+    background-position: left-bottom;
+    background-repeat: repeat-x;
+    background-size: 16px 16px;
+  }
+
+  /* Animations */
+  @keyframes slide-up {
+    from {
+      transform: translateY(100%);
+    }
+
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out forwards;
+  }
+
+  @keyframes bounce-slow {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  .animate-bounce-slow {
+    animation: bounce-slow 3s linear infinite;
+  }
+
+  /* Hover & Active Pro Canvas-style */
+  .pro-card {
+    @apply transition-all duration-300 ease-out;
+  }
+  .pro-card:hover {
+    @apply -translate-y-1 shadow-[0_12px_24px_-10px_rgba(0,0,0,0.1)];
+  }
+  .pro-card:active {
+    @apply scale-[0.98] -translate-y-0.5 shadow-sm;
+  }
+  .dark .pro-card:hover {
+    @apply shadow-[0_12px_24px_-10px_rgba(0,0,0,0.4)] border-white/10;
+  }
+}
+
+/* Sonner Toaster: flush to right edge — desktop & mobile */
+html body [data-sonner-toaster] {
+  right: 4px !important;
+  bottom: 14px !important;
+  left: auto !important;
+  width: 320px !important; /* Default compact width */
+  max-width: 380px !important; /* Allow expansion up to 380px */
+  padding: 0 !important;
+  margin: 0 !important;
+  --offset: 14px !important;
+  --mobile-offset: 14px !important;
+}
+
+html body [data-sonner-toaster] [data-sonner-toast] {
+  right: 0px !important;
+  margin-right: 0px !important;
+  width: 100% !important;
+  max-width: 320px !important; /* Default compact width */
+}
+
+/* If the toaster has a wide toast inside it, allow the toaster parent to widen */
+html body [data-sonner-toaster]:has(.toast-wide) {
+  width: auto !important;
+}
+
+/* When toast has toast-wide class, expand its width so it reflows cleanly up to 380px */
+html body [data-sonner-toaster]:has(.toast-wide) [data-sonner-toast].toast-wide {
+  width: auto !important;
+  max-width: 380px !important;
+}
+
+/* Sonner internal mobile breakpoint is 600px — must match exactly */
+@media (max-width: 600px) {
+  html body [data-sonner-toaster] {
+    right: 4px !important;
+    bottom: 12px !important;
+    left: auto !important;
+    width: 280px !important; /* Default compact mobile width */
+    max-width: 340px !important; /* Allow expansion up to 340px */
+    padding: 0 !important;
+    margin: 0 !important;
+    --offset: 12px !important;
+    --mobile-offset: 12px !important;
+  }
+  
+  html body [data-sonner-toaster] [data-sonner-toast] {
+    right: 0px !important;
+    margin-right: 0px !important;
+    width: 100% !important;
+    max-width: 280px !important; /* Default compact mobile width */
+  }
+
+  html body [data-sonner-toaster]:has(.toast-wide) {
+    width: auto !important;
+  }
+
+  html body [data-sonner-toaster]:has(.toast-wide) [data-sonner-toast].toast-wide {
+    width: auto !important;
+    max-width: 340px !important;
+  }
+}
+
+/* ─── CAPACITOR NATIVE OVERLAY SAFE AREAS ─── */
+
+/* Deklarasi Variabel Safe Area */
+:root {
+  --sat: env(safe-area-inset-top, 24px);
+  --sab: env(safe-area-inset-bottom, 24px);
+  --bottom-sheet-safe-area: 0px;
+}
+
+body.is-native {
+  --bottom-sheet-safe-area: var(--sab);
+}
+
+/* -- HEADER & ATAS (Topbar) -- */
+body.is-native .app-topbar {
+  padding-top: calc(var(--sat) + 0.75rem) !important;
+  padding-bottom: 0.75rem !important;
+}
+
+/* Geser tombol toggle sidebar absolut agar tidak menabrak status bar */
+body.is-native button.absolute.-right-3\.5 {
+  top: calc(var(--sat) + 2rem) !important;
+}
+
+/* Geser tombol silang (close button) Sheet/Drawer/Dialog agar tidak terhalang status bar */
+body.is-native [role="dialog"] button.absolute.right-4.top-4,
+body.is-native [role="dialog"] .absolute.right-4.top-4 {
+  top: calc(var(--sat) + 1rem) !important;
+}
+
+/* -- SIDEBAR FLOAT & CURVE (Melengkung Rapi) -- */
+body.is-native .app-sidebar {
+  margin-top: calc(var(--sat) + 0.5rem) !important;
+  margin-bottom: var(--sab) !important;
+  margin-left: 0 !important;
+  height: calc(100dvh - var(--sat) - var(--sab) - 0.5rem) !important;
+  border-radius: 0 1.25rem 1.25rem 0 !important;
+  border-left: none !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  overflow: visible !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* -- BANNER EDITOR NATIVE SAFE AREAS -- */
+body.is-native .banner-editor-toolbar {
+  padding-top: var(--sat) !important;
+  height: calc(3.5rem + var(--sat)) !important;
+}
+
+/* Round the bottom corners of the sidebar footer so it conforms to the curved container */
+body.is-native .app-sidebar > div:last-child {
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 1.25rem !important;
+  padding-bottom: 1rem !important;
+}
+
+/* Make mobile drawer sheet background transparent so sidebar floats cleanly */
+body.is-native .sidebar-drawer {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+body.is-native .sidebar-drawer .app-sidebar {
+  margin-right: 0.5rem !important;
+  width: calc(100% - 0.5rem) !important;
+}
+
+body.is-native .app-content-wrapper {
+  padding-bottom: var(--sab) !important;
+}
+
+body.is-native .app-main {
+  /* Berikan padding bawah ekstra yang nyaman */
+  padding-bottom: 1.25rem !important;
+}
+
+/* Override page-level pb-24 padding inside scrollable area to reduce excessive bottom spacing */
+.app-main div.pb-24 {
+  padding-bottom: 2rem !important;
+}
+
+/* Pastikan elemen fixed bottom terdorong ke atas dengan aman */
+body.is-native .fixed.bottom-0.w-full {
+  bottom: var(--sab) !important;
+}
+
+/* Shift native floating bottom buttons (e.g. mobile cashier cart trigger) */
+body.is-native .fixed.bottom-6 {
+  bottom: calc(var(--sab) + 1.5rem) !important;
+}
+
+/* Bottom sheets & drawers (like Vaul Drawer, bottom Sheets, bottom dialogs) */
+body.is-native [role="dialog"].fixed.inset-x-0.bottom-0:not(.sidebar-drawer),
+body.is-native [role="dialog"].fixed.bottom-0:not(.sidebar-drawer),
+body.is-native [data-vaul-drawer] {
+  padding-bottom: calc(var(--sab) + 1.5rem) !important;
+}
+
+/* Full-height side sheets (left/right sliding sheets, e.g. sheet filter panels) */
+body.is-native [role="dialog"].fixed.inset-y-0.left-0:not(.sidebar-drawer),
+body.is-native [role="dialog"].fixed.inset-y-0.right-0:not(.sidebar-drawer),
+body.is-native [role="dialog"].fixed.inset-y-0:not(.sidebar-drawer) {
+  padding-top: calc(var(--sat) + 1.5rem) !important;
+  padding-bottom: calc(var(--sab) + 1.5rem) !important;
+}
+
+/* Push Sonner toasts above native safe area */
+body.is-native [data-sonner-toaster] {
+  bottom: calc(var(--sab) + 14px) !important;
+  --offset: calc(var(--sab) + 14px) !important;
+  --mobile-offset: calc(var(--sab) + 12px) !important;
+}
+
+@media (max-width: 600px) {
+  body.is-native [data-sonner-toaster] {
+    bottom: calc(var(--sab) + 12px) !important;
+  }
+}
+
+/* Push Radix UI toasts above native safe area */
+body.is-native [data-radix-toast-viewport],
+body.is-native ol[tabindex="-1"] {
+  bottom: calc(var(--sab) + 8px) !important;
+}
+
+/* -- KITCHEN APP NATIVE OVERRIDES -- */
+body.is-native .kitchen-topbar {
+  padding-top: calc(var(--sat) + 0.75rem) !important;
+  height: auto !important;
+}
+
+body.is-native .kitchen-bottombar {
+  padding-bottom: calc(var(--sab) + 0.5rem) !important;
+}
+
+/* Push Sonner and Radix toasts above the kitchen bottom bar */
+html:has(.kitchen-bottombar) body [data-sonner-toaster],
+html:has(.kitchen-bottombar) body [data-radix-toast-viewport] {
+  bottom: 84px !important;
+  --offset: 84px !important;
+  --mobile-offset: 80px !important;
+}
+@media (max-width: 600px) {
+  html:has(.kitchen-bottombar) body [data-sonner-toaster],
+  html:has(.kitchen-bottombar) body [data-radix-toast-viewport] {
+    bottom: 80px !important;
+  }
+}
+body.is-native:has(.kitchen-bottombar) [data-sonner-toaster],
+body.is-native:has(.kitchen-bottombar) [data-radix-toast-viewport] {
+  bottom: calc(var(--sab) + 84px) !important;
+  --offset: calc(var(--sab) + 84px) !important;
+  --mobile-offset: calc(var(--sab) + 80px) !important;
+}
+
+@media print {
+  tr { page-break-inside: avoid; }
+}
+

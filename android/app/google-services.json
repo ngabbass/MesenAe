@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "476484576003",
+    "project_id": "mesenae",
+    "storage_bucket": "mesenae.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:476484576003:android:ba2a87a93ccae5ec4a7f36",
+        "android_client_info": {
+          "package_name": "com.mesenae.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDK-J3_CTXNJvJaZeo0cMzCf5wuii_Ip8w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

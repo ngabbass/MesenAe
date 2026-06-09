@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "db": {
+      "source": "db/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/db/SKILL.md",
+      "computedHash": "45a3cdccc364a4bbd6cdf700fc069e9f24ebc0428098746cbfbf8b18a5e160d2"
+    },
+    "db-postgres-best-practices": {
+      "source": "db/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/db-postgres-best-practices/SKILL.md",
+      "computedHash": "d606a1146be6d54fb9e73f718b5320b9acac5ff2ba2d7230a555df4b5a923b4a"
+    }
+  }
+}
