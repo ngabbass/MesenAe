@@ -96,11 +96,8 @@ export default function VariantLabelModal({
       const dataUrl = await captureLabel();
       if (!dataUrl) { setPrinting(false); return; }
 
-      // Optimasi CSS image-rendering untuk menjaga ketajaman
-      const htmlContent = `<html><head><title>Label Varian</title><style>@page{margin:0;size:auto;}body{margin:0;padding:0;background:#fff;text-align:center;}.wrap{padding:0;text-align:center;width:100%;}img{width:100%;max-width:50mm;height:auto;display:inline-block;margin: 0 auto;image-rendering:crisp-edges;image-rendering:pixelated;}@media print{@page{margin:0;size:auto;}html,body{margin:0;padding:0;}}</style></head><body><div class="wrap"><img src="${dataUrl}"/></div></body></html>`;
-
-      const cordovaPrinted = await printHtmlContent(htmlContent, 'Label Varian');
-      if (!cordovaPrinted) await universalPrint(htmlContent, 'Label Varian');
+      const cordovaPrinted = await printHtmlContent(dataUrl, 'Label Varian');
+      if (!cordovaPrinted) await universalPrint(dataUrl, 'Label Varian');
     } catch (err) { toast.error('Gagal cetak label'); } finally { setPrinting(false); }
   };
 
@@ -120,10 +117,8 @@ export default function VariantLabelModal({
       
       if (!dataUrl) { setPrinting(false); return; }
 
-      const htmlContent = `<html><head><title>Semua Label Varian</title><style>@page{margin:0;size:auto;}body{margin:0;padding:0;background:#fff;text-align:center;}.wrap{padding:0;text-align:center;width:100%;}img{width:100%;max-width:50mm;height:auto;display:inline-block;margin: 0 auto;image-rendering:crisp-edges;image-rendering:pixelated;}@media print{@page{margin:0;size:auto;}html,body{margin:0;padding:0;}}</style></head><body><div class="wrap"><img src="${dataUrl}"/></div></body></html>`;
-
-      const cordovaPrinted = await printHtmlContent(htmlContent, 'Semua Label Varian');
-      if (!cordovaPrinted) await universalPrint(htmlContent, 'Semua Label Varian');
+      const cordovaPrinted = await printHtmlContent(dataUrl, 'Semua Label Varian');
+      if (!cordovaPrinted) await universalPrint(dataUrl, 'Semua Label Varian');
     } catch (err) { toast.error('Gagal cetak semua label'); } finally { setPrinting(false); }
   };
 

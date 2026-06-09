@@ -348,37 +348,15 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
       return;
     }
 
-    // Mobile / Native Capacitor Print (Menggunakan HTML Image Fallback)
+    // Mobile / Native Capacitor Print
     setPrinting(true);
     try {
       const dataUrl = await captureReceipt();
       if (!dataUrl) { setPrinting(false); return; }
       
-      const printWidth = paperWidthVal === '58mm' ? '58mm' : '80mm';
-      const htmlContent = `
-        <html>
-          <head>
-            <title>Cetak Struk</title>
-            <style>
-              @page { margin: 10mm auto; size: auto; }
-              body { margin: 0; padding: 0; background: #fff; display: flex; justify-content: center; text-align: center; }
-              .receipt-img-wrap { width: 100%; text-align: center; }
-              img { 
-                width: 100%; max-width: ${printWidth}; height: auto; 
-                image-rendering: -webkit-optimize-contrast; 
-                image-rendering: crisp-edges;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="receipt-img-wrap"><img src="${dataUrl}" /></div>
-          </body>
-        </html>
-      `;
-
-      const cordovaPrinted = await printHtmlContent(htmlContent, 'Cetak Struk');
+      const cordovaPrinted = await printHtmlContent(dataUrl, `Struk_${transaction.receiptNumber}`);
       if (!cordovaPrinted) {
-        await universalPrint(htmlContent, 'Cetak Struk');
+        await universalPrint(dataUrl, `Struk_${transaction.receiptNumber}`);
       }
     } catch (err) {
       console.error('System print error:', err);
@@ -746,7 +724,7 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
               <div className="w-full text-left uppercase text-[0.85em] relative z-10">
                 {showLogo && storeSettings?.logo && (
                   <div className="mb-3 text-center">
-                    <img crossOrigin="anonymous" src={processedLogo || storeSettings.logo} alt="Logo" className="w-28 h-8 object-contain mx-auto mb-2 grayscale" style={{ filter: 'grayscale(1) contrast(1.2) brightness(1.1)' }} />
+                    <img crossOrigin="anonymous" src={processedLogo || storeSettings.logo} alt="Logo" className="w-36 h-12 object-contain mx-auto mb-2 grayscale" style={{ filter: 'grayscale(1) contrast(1.2) brightness(1.1)' }} />
                   </div>
                 )}
                 <div className="mb-2">
@@ -818,7 +796,7 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
               <div className="w-full text-left text-[0.85em] relative z-10">
                 <div className="text-center mb-4">
                   {showLogo && storeSettings?.logo && (
-                    <div className="w-14 h-14 mx-auto mb-2 overflow-hidden bg-transparent">
+                    <div className="w-36 h-16 mx-auto mb-2 overflow-hidden bg-transparent">
                       <img crossOrigin="anonymous" src={processedLogo || storeSettings.logo} alt="Logo" className="w-full h-full object-contain mx-auto grayscale" />
                     </div>
                   )}
@@ -900,7 +878,7 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
               <div className="w-full text-[0.85em] relative z-10">
                 <div className="text-center mb-3">
                   {showLogo && storeSettings?.logo && (
-                    <div className="w-16 h-16 mx-auto mb-2 overflow-hidden bg-transparent">
+                    <div className="w-36 h-16 mx-auto mb-2 overflow-hidden bg-transparent">
                       <img crossOrigin="anonymous" src={processedLogo || storeSettings.logo} alt="Logo" className="w-full h-full object-contain mx-auto grayscale" />
                     </div>
                   )}
@@ -975,7 +953,7 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
               <div className="w-full text-center text-[0.85em] relative z-10">
                 <div className="mb-4">
                   {showLogo && storeSettings?.logo && (
-                    <div className="w-10 h-10 mx-auto mb-2 overflow-hidden bg-transparent">
+                    <div className="w-36 h-16 mx-auto mb-2 overflow-hidden bg-transparent">
                       <img crossOrigin="anonymous" src={processedLogo || storeSettings.logo} alt="Logo" className="w-full h-full object-contain mx-auto grayscale" />
                     </div>
                   )}

@@ -106,3 +106,21 @@ export async function setThemeColor(hue: string) {
     await dbUpdate('store_settings', settings.id, { themeColor: hue });
   }
 }
+
+export async function getActiveThemeColorHex(): Promise<string> {
+  try {
+    const cachedSettings = await getLocalCache('store_settings');
+    const settings = cachedSettings?.[0];
+    const activeHue = settings?.themeColor ?? '217';
+    const preset = THEME_COLORS.find(c => c.hue === activeHue);
+    if (preset) {
+      const h = parseInt(preset.hue, 10);
+      const s = parseInt(preset.saturation.replace('%', ''), 10);
+      const l = parseInt(preset.lightness.replace('%', ''), 10);
+      return hslToHex(h, s, l);
+    }
+    return '#3b82f6';
+  } catch (e) {
+    return '#3b82f6';
+  }
+}

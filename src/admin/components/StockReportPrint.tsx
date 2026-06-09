@@ -245,16 +245,6 @@ export default function StockReportPrint({ data }: StockReportPrintProps) {
 
       {/* Gunakan style block yang persis sama dengan ReportPrint untuk stabilitas */}
       <style>{`
-        @media screen {
-          #mesenae-print-section {
-            position: fixed !important;
-            top: -9999px !important; left: -9999px !important;
-            width: 1px !important; height: 1px !important;
-            overflow: hidden !important; opacity: 0 !important;
-            pointer-events: none !important; z-index: -999 !important;
-          }
-        }
-
         @media print {
           @page { size: A4 portrait; margin: 10mm 8mm; }
 

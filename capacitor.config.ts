@@ -8,11 +8,11 @@ const config: CapacitorConfig = {
     PushNotifications: {
       presentationOptions: ["badge"],
       smallIcon: "ic_notification",
-      iconColor: "#f97316"
+      iconColor: "#3b82f6"
     },
     LocalNotifications: {
       smallIcon: "ic_notification",
-      iconColor: "#f97316"
+      iconColor: "#3b82f6"
     },
     SplashScreen: {
       launchAutoHide: false,

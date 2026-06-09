@@ -440,15 +440,15 @@ export default function QrCodeMenu() {
           <head>
             <title>Cetak QR Code - ${activeTable}</title>
             <style>
-              @page { 
-                margin: 0; 
+              @page {
+                margin: 0;
               }
-              html, body { 
-                margin: 0; 
-                padding: 0; 
-                width: 100%; 
-                height: 100%; 
-                background: #ffffff; 
+              html, body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                background: #ffffff;
                 overflow: hidden; /* Mencegah halaman ekstra */
               }
               .print-wrap {
@@ -460,9 +460,9 @@ export default function QrCodeMenu() {
                 padding: 8mm; /* Margin aman print mekanis */
                 box-sizing: border-box;
               }
-              img { 
-                max-width: 100%; 
-                max-height: 100%; 
+              img {
+                max-width: 100%;
+                max-height: 100%;
                 object-fit: contain; /* Mengamankan proporsi tanpa stretch/crop */
                 display: block;
               }

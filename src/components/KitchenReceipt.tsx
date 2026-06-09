@@ -61,45 +61,10 @@ export default function KitchenReceipt({ open, onClose, transaction, items, stor
     try {
       const dataUrl = await captureReceipt();
       if (!dataUrl) { setPrinting(false); return; }
-      
-      const paperWidthVal = (storeSettings as any)?.receiptTypography?.paperWidth || '58mm';
-      const printWidth = paperWidthVal === '58mm' ? '58mm' : '80mm';
 
-      // CSS dioptimalkan dengan image-rendering agar gambar tidak blur (anti-aliasing) 
-      // saat dirender oleh printer thermal.
-      const htmlContent = `
-        <html>
-          <head>
-            <title>Tiket Dapur</title>
-            <style>
-              @page { margin: 0; size: auto; }
-              * { box-sizing: border-box; }
-              body { margin: 0; padding: 0; background: #fff; text-align: center; }
-              .wrap { padding: 0; text-align: center; width: 100%; }
-              img { 
-                width: 100%; 
-                max-width: ${printWidth}; 
-                height: auto; 
-                display: inline-block; 
-                margin: 0 auto; 
-                image-rendering: crisp-edges; 
-                image-rendering: pixelated; 
-              }
-              @media print {
-                @page { margin: 0; size: auto; }
-                html, body { margin: 0; padding: 0; }
-              }
-            </style>
-          </head>
-          <body>
-            <div class="wrap"><img src="${dataUrl}" /></div>
-          </body>
-        </html>
-      `;
-
-      const printed = await printHtmlContent(htmlContent, 'Tiket Dapur');
+      const printed = await printHtmlContent(dataUrl, `Dapur_${transaction.receiptNumber}`);
       if (!printed) {
-        await universalPrint(htmlContent, 'Tiket Dapur');
+        await universalPrint(dataUrl, `Dapur_${transaction.receiptNumber}`);
       }
     } catch (err) {
       console.error('System print error:', err);

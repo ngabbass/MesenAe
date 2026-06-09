@@ -83,6 +83,7 @@ export default function ReportShareModal({ isOpen, onClose, onGenerate, storeNam
       const startStr = startDate.toISOString().split('T')[0];
       const endStr = endDate.toISOString().split('T')[0];
       const docName = `Laporan_Keuangan_${startStr}_to_${endStr}`;
+      
       const htmlContent = `
         <!DOCTYPE html>
         <html>
@@ -106,7 +107,7 @@ export default function ReportShareModal({ isOpen, onClose, onGenerate, storeNam
           </body>
         </html>
       `;
-      
+
       const printed = await printHtmlContent(htmlContent, docName);
       if (!printed) {
         await universalPrint(htmlContent, docName);

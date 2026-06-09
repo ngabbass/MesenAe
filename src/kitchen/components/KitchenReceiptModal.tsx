@@ -8,7 +8,7 @@ import {
 import { toast } from 'sonner';
 import { cn, formatReceiptTable } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { printHtmlContent } from '@/lib/print-helper';
+import { printHtmlContent, universalPrint } from '@/lib/print-helper';
 import type { Transaction, TransactionItemRecord, StoreSettings } from '@/hooks/db-hooks';
 import { Capacitor } from '@capacitor/core';
 
@@ -69,28 +69,10 @@ export default function KitchenReceiptModal({
       const dataUrl = await captureReceipt();
       if (!dataUrl) return;
 
-      const paperWidthVal = (storeSettings as any)?.receiptTypography?.paperWidth || '58mm';
-      const printWidth = paperWidthVal === '58mm' ? '58mm' : '80mm';
-      const htmlContent = `<html><head><title>Tiket Dapur</title><style>@page{margin:0;size:auto}*{box-sizing:border-box}body{margin:0;padding:0;background:#fff;text-align:center}.wrap{padding:0;text-align:center;width:100%}img{width:100%;max-width:${printWidth};height:auto;display:inline-block;margin:0 auto}@media print{@page{margin:0;size:auto}html,body{margin:0;padding:0}}</style></head><body><div class="wrap"><img src="${dataUrl}"/></div></body></html>`;
-
-      const printed = await printHtmlContent(htmlContent, 'Tiket Dapur');
-      if (printed) { toast.success('Membuka dialog cetak sistem...'); return; }
-
-      const iframe = document.createElement('iframe');
-      iframe.style.cssText = 'position:fixed;width:0;height:0;border:none;left:-9999px';
-      document.body.appendChild(iframe);
-      const iframeDoc = iframe.contentWindow?.document || iframe.contentDocument;
-      if (!iframeDoc) {
-        toast.error('Gagal membuka jendela cetak');
-        document.body.removeChild(iframe);
-        return;
+      const printed = await printHtmlContent(dataUrl, `Dapur_${transaction.receiptNumber}`);
+      if (!printed) {
+        await universalPrint(dataUrl, `Dapur_${transaction.receiptNumber}`);
       }
-      iframeDoc.open();
-      iframeDoc.write(
-        `${htmlContent}<script>window.onload=function(){window.focus();setTimeout(function(){window.print();setTimeout(function(){try{window.parent.document.body.removeChild(window.frameElement)}catch(e){}},1500)},400)}<\/script>`,
-      );
-      iframeDoc.close();
-      toast.success('Membuka dialog cetak sistem...');
     } catch (err) {
       console.error('System print error:', err);
       toast.error('Gagal membuka cetak sistem');

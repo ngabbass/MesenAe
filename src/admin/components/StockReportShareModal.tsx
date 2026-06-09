@@ -79,6 +79,7 @@ export default function StockReportShareModal({ isOpen, onClose, onGenerate, sto
       const startStr = startDate.toISOString().split('T')[0];
       const endStr = endDate.toISOString().split('T')[0];
       const docName = `Laporan_Stok_${startStr}_to_${endStr}`;
+      
       const htmlContent = `
         <!DOCTYPE html>
         <html>
@@ -102,7 +103,7 @@ export default function StockReportShareModal({ isOpen, onClose, onGenerate, sto
           </body>
         </html>
       `;
-      
+
       const printed = await printHtmlContent(htmlContent, docName);
       if (!printed) {
         await universalPrint(htmlContent, docName);
