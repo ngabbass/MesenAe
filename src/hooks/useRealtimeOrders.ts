@@ -6,30 +6,39 @@ import { Haptics } from '@capacitor/haptics';
 import { toast } from 'sonner';
 import { processedNotificationIds } from '@/lib/fcm';
 import { getActiveThemeColorHex } from '@/hooks/use-theme-color';
+import { usePermissions } from '@/hooks/use-permissions';
+
+const isActiveOrder = (order: any) => {
+  const isUnpaid = order.status === 'belum lunas';
+  const isPaidButCooking = order.status === 'lunas' && order.kitchenStatus && !['diantarkan', 'selesai'].includes(order.kitchenStatus);
+  const isPaidRetailWeb = order.status === 'lunas' && (order.remarks || '').includes('Web') && (!order.kitchenStatus || order.kitchenStatus === 'pending');
+  return isUnpaid || isPaidButCooking || isPaidRetailWeb;
+};
 
 export function useRealtimeOrders() {
+  const { authData } = usePermissions();
   const isInitialLoad = useRef(true);
   const knownOrderIds = useRef<Set<string>>(new Set());
 
-  // sessionStartTimeRef dihapus. Kita murni mengandalkan isInitialLoad
-  // karena onSnapshot Firestore dijamin memberikan data lama di callback pertama,
-  // dan HANYA data baru di callback kedua dan seterusnya. Ini kebal terhadap perbedaan jam perangkat.
-
   useEffect(() => {
-    let mounted = true;
-    let unsubscribe = () => {};
-
-    // Validasi role user yang sedang login
-    const authDataStr = localStorage.getItem('admin_auth') || '{}';
-    let authData: any = {};
-    try {
-      authData = JSON.parse(authDataStr);
-    } catch (_) {}
-
-    const allowedRoles = ['admin', 'dapur', 'kasir', 'kitchen'];
-    if (!allowedRoles.includes(authData.role)) {
+    // 1. Validasi login & role user
+    if (!authData || !authData.username) {
+      console.log('[RealtimeOrders] User not logged in. Skipping realtime listener.');
       return;
     }
+
+    const allowedRoles = ['admin', 'dapur', 'kasir', 'kitchen', 'user'];
+    if (!allowedRoles.includes(authData.role)) {
+      console.log(`[RealtimeOrders] Role "${authData.role}" is not allowed to monitor orders. Skipping.`);
+      return;
+    }
+
+    // Reset load pertama & daftar cache order ID saat sesi baru dimulai
+    isInitialLoad.current = true;
+    knownOrderIds.current = new Set();
+
+    let mounted = true;
+    let unsubscribe = () => {};
 
     const currentCashierName = authData.name || authData.username || 'Kasir';
 
@@ -58,7 +67,8 @@ export function useRealtimeOrders() {
                   const txCashier = String(data.cashier_name || data.cashierName || '').trim().toLowerCase();
                   const currentCashier = String(currentCashierName).trim().toLowerCase();
                   
-                  if (txCashier !== currentCashier) {
+                  // Hanya proses jika bukan kasir yang sama yang membuat, dan merupakan pesanan aktif
+                  if (txCashier !== currentCashier && isActiveOrder(data)) {
                     newOrders.push({ id, ...data });
                   }
                 }
@@ -79,7 +89,7 @@ export function useRealtimeOrders() {
             
             // 1. Cek Duplikasi (Menghindari double notif jika FCM push juga masuk)
             if (processedNotificationIds.has(receiptNum)) {
-              console.log(`[RealtimeOrders] Order #${receiptNum} already notified via FCM, skipping duplicate.`);
+              console.log(`[RealtimeOrders] Order #${receiptNum} already notified, skipping duplicate.`);
               continue;
             }
             
@@ -154,5 +164,5 @@ export function useRealtimeOrders() {
       mounted = false;
       unsubscribe();
     };
-  }, []); // Kosong agar hanya jalan sekali saat mount
+  }, [authData]);
 }

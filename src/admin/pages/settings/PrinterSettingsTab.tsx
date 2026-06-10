@@ -24,7 +24,8 @@ import {
   Cable,
   Tag
 } from 'lucide-react';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
+const NativePrint = registerPlugin<any>('NativePrint');
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -345,26 +346,24 @@ export default function PrinterSettings({ hasEditAccess = true }: { hasEditAcces
     } else if (printer.type === 'usb_otg' || printer.type === 'system') {
       // System printing triggers Android OS print manager which handles standard USB printers beautifully via OTG cables!
       if (Capacitor.isNativePlatform()) {
-        // @ts-ignore
-        if (window.cordova && window.cordova.plugins && window.cordova.plugins.printer) {
-          const htmlContent = `
-            <div style="font-family: monospace; text-align: center; width: 58mm; padding: 5px; font-size: 10px;">
-              <h3>MESEN AE POS</h3>
-              <p><b>TES PRINTER DIRECT USB OTG</b></p>
-              <hr style="border-top: 1px dashed black;" />
-              <p style="text-align: left;">Rute: ${printer.role}</p>
-              <p style="text-align: left;">Koneksi: USB OTG (${printer.address})</p>
-              <hr style="border-top: 1px dashed black;" />
-              <h3>[✓] KONEKSI SUKSES</h3>
-            </div>
-          `;
-          // @ts-ignore
-          window.cordova.plugins.printer.print(htmlContent, { name: 'MesenAe Test USB Print' }, () => {
+        const htmlContent = `
+          <div style="font-family: monospace; text-align: center; width: 58mm; padding: 5px; font-size: 10px;">
+            <h3>MESEN AE POS</h3>
+            <p><b>TES PRINTER DIRECT USB OTG</b></p>
+            <hr style="border-top: 1px dashed black;" />
+            <p style="text-align: left;">Rute: ${printer.role}</p>
+            <p style="text-align: left;">Koneksi: USB OTG (${printer.address})</p>
+            <hr style="border-top: 1px dashed black;" />
+            <h3>[✓] KONEKSI SUKSES</h3>
+          </div>
+        `;
+        NativePrint.printHtml({ html: htmlContent, title: 'MesenAe Test USB Print' })
+          .then(() => {
             toast.success('Dialog Print USB OTG selesai.');
+          })
+          .catch((err: any) => {
+            toast.error('Gagal memicu cetak USB OTG: ' + err);
           });
-        } else {
-          toast.error('Plugin Printer System USB OTG tidak ditemukan.');
-        }
       } else {
         window.print();
       }

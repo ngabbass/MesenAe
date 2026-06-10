@@ -347,9 +347,11 @@ body.is-native button.absolute.-right-3\.5 {
   top: calc(var(--sat) + 2rem) !important;
 }
 
-/* Geser tombol silang (close button) Sheet/Drawer/Dialog agar tidak terhalang status bar */
-body.is-native [role="dialog"] button.absolute.right-4.top-4,
-body.is-native [role="dialog"] .absolute.right-4.top-4 {
+/* Geser tombol silang (close button) Sheet/Drawer/Dialog agar tidak terhalang status bar (hanya untuk sheet/drawer samping/atas yang menyentuh status bar) */
+body.is-native [role="dialog"].fixed.inset-y-0:not(.fixed.inset-x-0.bottom-0) button.absolute.right-4.top-4,
+body.is-native [role="dialog"].fixed.inset-y-0:not(.fixed.inset-x-0.bottom-0) .absolute.right-4.top-4,
+body.is-native [role="dialog"].fixed.top-0 button.absolute.right-4.top-4,
+body.is-native [role="dialog"].fixed.top-0 .absolute.right-4.top-4 {
   top: calc(var(--sat) + 1rem) !important;
 }
 

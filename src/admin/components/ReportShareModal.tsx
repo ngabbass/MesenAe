@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import ReportWhatsAppModal from './ReportWhatsAppModal';
 import ReportPrint from './ReportPrint';
 import type { MesenAeReportData } from './ReportPrint';
-import { printHtmlContent, universalPrint, printElementNative } from '@/lib/print-helper';
+import { printHtmlContent, universalPrint, printElementNative, printReportA4 } from '@/lib/print-helper';
 import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -87,8 +87,8 @@ export default function ReportShareModal({ isOpen, onClose, onGenerate, storeNam
       
       const isNative = Capacitor.isNativePlatform();
       if (isNative) {
-        // Render ke PNG untuk native sharing/printing agar tidak berupa file HTML teks
-        await printElementNative('mesenae-print-section', docName);
+        // Kirim HTML murni untuk dokumen panjang (A4 landscape), bukan PNG
+        await printReportA4('mesenae-print-section', docName);
       } else {
         // Di Web, cetak langsung raw HTML agar page-break dan margins normal
         const htmlContent = `

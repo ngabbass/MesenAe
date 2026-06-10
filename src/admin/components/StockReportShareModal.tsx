@@ -10,7 +10,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { printHtmlContent, universalPrint, printElementNative } from '@/lib/print-helper';
+import { printHtmlContent, universalPrint, printElementNative, printReportA4 } from '@/lib/print-helper';
 import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
 
@@ -83,8 +83,8 @@ export default function StockReportShareModal({ isOpen, onClose, onGenerate, sto
       
       const isNative = Capacitor.isNativePlatform();
       if (isNative) {
-        // Render ke PNG untuk native sharing/printing agar tidak berupa file HTML teks
-        await printElementNative('mesenae-print-section', docName);
+        // Kirim HTML murni untuk dokumen panjang (A4 landscape), bukan PNG
+        await printReportA4('mesenae-print-section', docName);
       } else {
         // Di Web, cetak langsung raw HTML agar page-break dan margins normal
         const htmlContent = `

@@ -11,7 +11,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@awesome-cordova-plugins/bluetooth-serial": "^9.2.0",
     "@capacitor-community/bluetooth-le": "^8.2.0",
     "@capacitor-community/keep-awake": "^8.0.1",
     "@capacitor-mlkit/barcode-scanning": "^8.1.0",
@@ -68,8 +67,6 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
-    "cordova-plugin-bluetooth-serial": "^0.4.7",
-    "cordova-plugin-printer": "^0.8.0",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.6.0",
     "firebase": "^12.13.0",

@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Menu, Store, Maximize, Minimize } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { Skeleton } from '@/admin/components/SkeletonLoaders';
-import GlobalAdminNotifier from '../GlobalAdminNotifier';
 import PermissionDebugger from '../PermissionDebugger';
 import { App } from '@capacitor/app';
 import { toast } from 'sonner';
@@ -243,7 +242,6 @@ export default function AppLayout() {
 
   return (
     <div className="flex h-[100dvh] w-full bg-background overflow-hidden">
-      <GlobalAdminNotifier />
       <PermissionDebugger />
       {/* Desktop Sidebar */}
       <div className="hidden lg:block h-full shrink-0">
@@ -253,7 +251,7 @@ export default function AppLayout() {
       <div className="app-content-wrapper flex-1 flex flex-col h-full overflow-hidden relative bg-slate-50 dark:bg-slate-950">
         {/* Mobile Sidebar Drawer Sheet */}
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetContent side="left" className="sidebar-drawer p-0 w-64 border-r-0 bg-[#0a1128] h-[100dvh] max-h-screen flex flex-col">
+          <SheetContent side="left" hideClose className="sidebar-drawer p-0 w-64 border-r-0 bg-[#0a1128] h-[100dvh] max-h-screen flex flex-col">
             <AppSidebar isMobile={true} />
           </SheetContent>
         </Sheet>

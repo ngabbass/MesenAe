@@ -1,8 +1,112 @@
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { toast } from 'sonner';
 import { toPng } from 'html-to-image';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
+
+interface NativePrintPluginType {
+  printHtml(options: { html: string; title?: string; mediaSize?: string }): Promise<{ success: boolean }>;
+  listBluetoothPrinters(): Promise<{ printers: { name: string; address: string; id: string }[] }>;
+  printBluetoothEscPos(options: { address: string; data: string }): Promise<{ success: boolean }>;
+}
+
+const NativePrint = registerPlugin<NativePrintPluginType>('NativePrint');
+
+// Polyfill window.bluetoothSerial to redirect SPP commands to NativePrint on Android
+const polyfillBluetoothSerial = () => {
+  if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android') {
+    // Keep track of active connection state and buffer
+    (window as any)._activeBluetoothAddress = null;
+    (window as any)._bluetoothWriteBuffer = null;
+
+    // @ts-ignore
+    window.bluetoothSerial = {
+      disconnect: (success?: () => void, failure?: (err: any) => void) => {
+        const address = (window as any)._activeBluetoothAddress;
+        const buffer = (window as any)._bluetoothWriteBuffer;
+        
+        if (address && buffer && buffer.length > 0) {
+          // Convert binary buffer to base64 safely
+          let binary = '';
+          const len = buffer.byteLength;
+          for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode(buffer[i]);
+          }
+          const base64Data = window.btoa(binary);
+          
+          // Clear active session
+          (window as any)._bluetoothWriteBuffer = null;
+          (window as any)._activeBluetoothAddress = null;
+
+          NativePrint.printBluetoothEscPos({ address, data: base64Data })
+            .then(() => {
+              if (success) success();
+            })
+            .catch((err: any) => {
+              console.warn('[BluetoothSerial Polyfill] Direct write failed:', err);
+              if (failure) failure(err);
+            });
+        } else {
+          (window as any)._bluetoothWriteBuffer = null;
+          (window as any)._activeBluetoothAddress = null;
+          if (success) success();
+        }
+      },
+      list: (success: (results: any[]) => void, failure: (err: any) => void) => {
+        NativePrint.listBluetoothPrinters()
+          .then((res: any) => {
+            success(res.printers || []);
+          })
+          .catch((err: any) => {
+            if (failure) failure(err);
+          });
+      },
+      connect: (address: string, success: () => void, failure: (err: any) => void) => {
+        (window as any)._activeBluetoothAddress = address;
+        (window as any)._bluetoothWriteBuffer = new Uint8Array(0);
+        if (success) success();
+      },
+      write: (dataBuffer: ArrayBuffer, success: () => void, failure: (err: any) => void) => {
+        const currentBuffer = (window as any)._bluetoothWriteBuffer;
+        if (currentBuffer) {
+          const incoming = new Uint8Array(dataBuffer);
+          const newBuffer = new Uint8Array(currentBuffer.length + incoming.length);
+          newBuffer.set(currentBuffer);
+          newBuffer.set(incoming, currentBuffer.length);
+          (window as any)._bluetoothWriteBuffer = newBuffer;
+          if (success) success();
+        } else {
+          const address = (window as any)._activeBluetoothAddress;
+          if (!address) {
+            if (failure) failure("No printer connected");
+            return;
+          }
+          const incoming = new Uint8Array(dataBuffer);
+          let binary = '';
+          const len = incoming.byteLength;
+          for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode(incoming[i]);
+          }
+          const base64Data = window.btoa(binary);
+
+          NativePrint.printBluetoothEscPos({ address, data: base64Data })
+            .then(() => {
+              if (success) success();
+            })
+            .catch((err: any) => {
+              if (failure) failure(err);
+            });
+        }
+      }
+    };
+  }
+};
+
+try {
+  polyfillBluetoothSerial();
+} catch (e) {
+  console.error('[BluetoothSerial Polyfill] Failed to initialize:', e);
+}
 
 /**
  * cleanOldPrintCache — Membersihkan file print lama di folder Cache Capacitor.
@@ -56,6 +160,62 @@ export async function printHtmlContent(htmlContent: string, documentName: string
   const isNative = Capacitor.isNativePlatform();
   if (!isNative) return false;
 
+  // Coba gunakan plugin NativePrint di Android
+  if (Capacitor.getPlatform() === 'android') {
+    try {
+      const trimmed = htmlContent.trim();
+      let isBase64Image = false;
+      let rawBase64 = '';
+      
+      if (trimmed.startsWith('data:image/') && trimmed.includes('base64,')) {
+        isBase64Image = true;
+        rawBase64 = trimmed.split('base64,')[1];
+      } else if (trimmed.includes('base64,')) {
+        const match = trimmed.match(/src=["']data:image\/[^;]+;base64,([^"']+)["']/);
+        if (match && match[1]) {
+          isBase64Image = true;
+          rawBase64 = match[1];
+        }
+      } else if (trimmed.startsWith('base64://')) {
+        isBase64Image = true;
+        rawBase64 = trimmed.substring(9);
+      }
+
+      let printableHtml = htmlContent;
+      if (isBase64Image && rawBase64) {
+        printableHtml = `
+          <html>
+            <head>
+              <title>${documentName}</title>
+              <style>
+                @page { margin: 0; size: auto; }
+                html, body { margin: 0; padding: 0; background: #fff; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
+                .img-wrap { padding: 0; display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; }
+                img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; margin: 0 auto; }
+              </style>
+            </head>
+            <body>
+              <div class="img-wrap"><img src="data:image/png;base64,${rawBase64}" alt="${documentName}" /></div>
+            </body>
+          </html>
+        `;
+      }
+
+      toast.info('Membuka dialog cetak native...');
+      const res = await NativePrint.printHtml({
+        html: printableHtml,
+        title: documentName,
+        mediaSize: (documentName.toLowerCase().includes('laporan') || documentName.toLowerCase().includes('cetak_')) ? 'A4' : 'default'
+      });
+      if (res.success) {
+        toast.success(`Cetak "${documentName}" berhasil!`);
+        return true;
+      }
+    } catch (err: any) {
+      console.warn('[Print] NativePrint failed, falling back to legacy methods...', err);
+    }
+  }
+
   // @ts-ignore
   const cordova = window.cordova;
   if (!cordova || !cordova.plugins || !cordova.plugins.printer) {
@@ -67,31 +227,29 @@ export async function printHtmlContent(htmlContent: string, documentName: string
   cleanOldPrintCache().catch(() => {});
 
   try {
-    let printTarget = '';
     const trimmed = htmlContent.trim();
     
+    // Deteksi apakah ini adalah base64 image (untuk struk/barcode yang sudah PNG)
+    let isBase64Image = false;
     let rawBase64 = '';
     
-    // Ekstrak Base64 murni dari data URL atau dari tag HTML img
     if (trimmed.startsWith('data:image/') && trimmed.includes('base64,')) {
+      isBase64Image = true;
       rawBase64 = trimmed.split('base64,')[1];
     } else if (trimmed.includes('base64,')) {
-      // Ini kemungkinan HTML yang membungkus gambar base64 (seperti dari Receipt/KitchenReceipt)
+      // Ekstrak base64 dari HTML yang membungkus gambar
       const match = trimmed.match(/src=["']data:image\/[^;]+;base64,([^"']+)["']/);
       if (match && match[1]) {
+        isBase64Image = true;
         rawBase64 = match[1];
-      } else {
-        const parts = trimmed.split('base64,');
-        if (parts.length > 1) {
-          rawBase64 = parts[1].replace(/["'<].*/g, '').trim();
-        }
       }
     } else if (trimmed.startsWith('base64://')) {
+      isBase64Image = true;
       rawBase64 = trimmed.substring(9);
     }
 
-    if (rawBase64) {
-      // Simpan Base64 sebagai file PNG di folder Cache Capacitor
+    // Jika ini adalah gambar base64, save sebagai PNG file
+    if (isBase64Image && rawBase64) {
       const fileName = `print_${Date.now()}_${Math.floor(Math.random() * 1000)}.png`;
       const savedFile = await Filesystem.writeFile({
         path: fileName,
@@ -99,40 +257,34 @@ export async function printHtmlContent(htmlContent: string, documentName: string
         directory: Directory.Cache
       });
       
-      // Plugin printer native SANGAT menyukai format file:// URI
-      printTarget = savedFile.uri;
-      console.log('[Print] Image base64 saved to cache file URI:', printTarget);
-    } else {
-      // FIX: Simpan HTML murni sebagai file .html agar OS merendernya dengan baik (Paginasi berfungsi)
-      const fileName = `Laporan_${Date.now()}_${Math.floor(Math.random() * 1000)}.html`;
-      const savedFile = await Filesystem.writeFile({
-        path: fileName,
-        data: htmlContent,
-        directory: Directory.Cache,
-        encoding: Encoding.UTF8
-      });
+      const printTarget = savedFile.uri;
+      console.log('[Print] Image saved to cache:', printTarget);
       
-      printTarget = savedFile.uri;
-      console.log('[Print] HTML content saved to cache file URI:', printTarget);
-    }
-
-    toast.info(`Menghubungkan ke printer untuk "${documentName}"...`);
-    
-    return new Promise<boolean>((resolve) => {
-      // @ts-ignore
-      cordova.plugins.printer.print(printTarget, { name: documentName }, (res: any) => {
-        console.log('[Print] Native cordova printer command sent:', res);
-        toast.success(`Cetak "${documentName}" berhasil!`);
-        resolve(true);
-      }, (err: any) => {
-        console.warn('[Print] cordova printer error:', err);
-        toast.error(`Cetak "${documentName}" gagal: ${err || 'Error'}`);
-        resolve(false);
+      toast.info(`Menghubungkan ke printer untuk "${documentName}"...`);
+      
+      return new Promise<boolean>((resolve) => {
+        // @ts-ignore
+        cordova.plugins.printer.print(printTarget, { name: documentName }, (res: any) => {
+          console.log('[Print] Native printer success:', res);
+          toast.success(`Cetak "${documentName}" berhasil!`);
+          resolve(true);
+        }, (err: any) => {
+          console.warn('[Print] Printer error:', err);
+          toast.error(`Cetak gagal: ${err || 'Error'}`);
+          resolve(false);
+        });
       });
-    });
+    }
+    
+    // PERBAIKAN CRITICAL: Untuk HTML murni, plugin cordova-plugin-printer v0.8.0
+    // TIDAK BISA render HTML dengan baik - hanya tampilkan teks HTML
+    // Solusi: Gunakan universalPrint yang akan render via iframe/share
+    console.warn('[Print] HTML string detected - falling back to universalPrint for proper rendering');
+    return await universalPrint(htmlContent, documentName);
+    
   } catch (err: any) {
-    console.warn('[Print] Gagal mengeksekusi printHtmlContent native:', err);
-    toast.error(`Gagal mencetak dokumen: ${err.message || err}`);
+    console.warn('[Print] Error:', err);
+    toast.error(`Gagal mencetak: ${err.message || err}`);
     return false;
   }
 }
@@ -150,7 +302,7 @@ export async function universalPrint(htmlContent: string, documentName: string =
   const isDataUrl = htmlContent.startsWith('data:image/') && htmlContent.includes('base64,');
   const isBase64Prefix = htmlContent.startsWith('base64://');
   
-  if (!isNative && (isDataUrl || isBase64Prefix)) {
+  if (isDataUrl || isBase64Prefix) {
     let imgSrc = htmlContent;
     if (isBase64Prefix) {
       imgSrc = `data:image/png;base64,${htmlContent.substring(9)}`;
@@ -174,7 +326,24 @@ export async function universalPrint(htmlContent: string, documentName: string =
   }
 
   if (isNative) {
-    toast.info('Membuka dialog berbagi...');
+    if (Capacitor.getPlatform() === 'android') {
+      try {
+        toast.info('Membuka dialog cetak native...');
+        const res = await NativePrint.printHtml({
+          html: printableHtml,
+          title: documentName,
+          mediaSize: (documentName.toLowerCase().includes('laporan') || documentName.toLowerCase().includes('cetak_')) ? 'A4' : 'default'
+        });
+        if (res.success) {
+          toast.success(`Cetak "${documentName}" berhasil!`);
+          return true;
+        }
+      } catch (err: any) {
+        console.warn('[universalPrint] NativePrint failed, trying legacy methods...', err);
+      }
+    }
+
+    toast.info('Membuka dialog cetak...');
     try {
       let base64Data = '';
       
@@ -200,6 +369,30 @@ export async function universalPrint(htmlContent: string, documentName: string =
           directory: Directory.Cache
         });
 
+        // PERBAIKAN: Coba dialog cetak native (cordova-plugin-printer) DULU
+        // @ts-ignore
+        const cordova = window.cordova;
+        if (cordova?.plugins?.printer) {
+          try {
+            const printed = await new Promise<boolean>((resolve) => {
+              // @ts-ignore
+              cordova.plugins.printer.print(result.uri, { name: documentName }, (res: any) => {
+                console.log('[universalPrint] Printer success:', res);
+                toast.success(`Cetak "${documentName}" berhasil!`);
+                resolve(true);
+              }, (err: any) => {
+                console.warn('[universalPrint] Printer error:', err);
+                resolve(false);
+              });
+            });
+            if (printed) return true;
+          } catch (printerErr) {
+            console.warn('[universalPrint] Printer plugin error:', printerErr);
+          }
+        }
+
+        // Fallback ke Share jika printer plugin tidak tersedia/gagal
+        toast.info('Membuka dialog berbagi dokumen...');
         await Share.share({
           title: documentName,
           text: `Dokumen: ${documentName}`,
@@ -209,7 +402,7 @@ export async function universalPrint(htmlContent: string, documentName: string =
         return true;
       }
 
-      // Jika HTML murni
+      // Jika HTML murni (tanpa base64 image) — simpan sebagai HTML lalu coba cetak
       const fileName = `${documentName.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}.html`;
       const result = await Filesystem.writeFile({
         path: fileName,
@@ -218,6 +411,24 @@ export async function universalPrint(htmlContent: string, documentName: string =
         encoding: Encoding.UTF8
       });
 
+      // Coba printer plugin dulu untuk HTML file
+      // @ts-ignore
+      const cordova2 = window.cordova;
+      if (cordova2?.plugins?.printer) {
+        try {
+          const printed = await new Promise<boolean>((resolve) => {
+            // @ts-ignore
+            cordova2.plugins.printer.print(result.uri, { name: documentName }, (res: any) => {
+              resolve(true);
+            }, (err: any) => {
+              resolve(false);
+            });
+          });
+          if (printed) return true;
+        } catch (_) {}
+      }
+
+      // Fallback ke Share
       await Share.share({
         title: documentName,
         text: `Dokumen: ${documentName}`,
@@ -226,8 +437,8 @@ export async function universalPrint(htmlContent: string, documentName: string =
       });
       return true;
     } catch (shareErr) {
-      console.error('[universalPrint] Share fallback failed:', shareErr);
-      toast.error('Gagal membuka dialog berbagi dokumen.');
+      console.error('[universalPrint] Print/Share fallback failed:', shareErr);
+      toast.error('Gagal membuka dialog cetak dokumen.');
       return false;
     }
   }
@@ -570,11 +781,66 @@ export async function printElementNative(elementId: string, documentName: string
     <html>
       <head>
         <title>${documentName}</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-          @page { margin: 0; size: auto; }
-          body { margin: 0; padding: 0; background: #fff; display: flex; justify-content: center; align-items: flex-start; }
-          .img-wrap { padding: 0; display: flex; justify-content: center; width: 100%; }
-          img { width: 100%; max-width: 100%; height: auto; display: block; margin: 0 auto; box-shadow: none; }
+          @page { 
+            margin: 0 !important; 
+            size: auto; 
+          }
+          * {
+            margin: 0 !important;
+            padding: 0 !important;
+            box-sizing: border-box;
+          }
+          html, body { 
+            width: 100%;
+            height: 100%;
+            margin: 0 !important; 
+            padding: 0 !important; 
+            background: white;
+            overflow: hidden;
+          }
+          body {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+          }
+          .img-wrap { 
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          img { 
+            width: 100% !important; 
+            max-width: 100% !important; 
+            height: auto !important; 
+            display: block; 
+            margin: 0 !important;
+            padding: 0 !important;
+            object-fit: contain;
+            object-position: top center;
+          }
+          @media print {
+            @page {
+              margin: 0 !important;
+              size: auto;
+            }
+            body {
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+            img {
+              width: 100% !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              page-break-inside: avoid;
+            }
+          }
         </style>
       </head>
       <body>
@@ -588,7 +854,8 @@ export async function printElementNative(elementId: string, documentName: string
 
 /**
  * printReportA4 — Khusus untuk mencetak dokumen panjang (Invoice, Laporan Keuangan, Laporan Stok)
- * Bekerja dengan mengirimkan HTML murni, tanpa merendernya menjadi gambar.
+ * Untuk Capacitor native: Konversi ke PNG dengan width penuh agar presisi dan rapi
+ * Untuk Web: Kirim HTML langsung
  */
 export async function printReportA4(elementId: string, documentName: string = 'Laporan'): Promise<boolean> {
   const el = document.getElementById(elementId);
@@ -598,57 +865,332 @@ export async function printReportA4(elementId: string, documentName: string = 'L
   }
 
   const isNative = Capacitor.isNativePlatform();
-  toast.info(`Menyiapkan dokumen "${documentName}"...`);
+  const platform = Capacitor.getPlatform();
 
-  // Ambil HTML mentah dari tabel/laporan
-  const rawHtml = el.outerHTML;
+  // Jika di Android (baik native maupun web), cetak HTML langsung agar vector dan tajam serta support multi-halaman tanpa OOM
+  if (platform === 'android') {
+    toast.info(`Menyiapkan dokumen "${documentName}"...`);
+    const rawHtml = el.outerHTML;
+    const fullHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${documentName}</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <meta charset="UTF-8">
+          <style>
+            @page { 
+              size: A4 portrait; 
+              margin: 15mm 10mm; 
+            }
+            body { 
+              font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+              padding: 0; 
+              margin: 0; 
+              background: white; 
+              color: black; 
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            * { box-sizing: border-box; }
+            table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              margin-top: 10px; 
+              margin-bottom: 15px; 
+              page-break-inside: auto;
+            }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+            th, td { 
+              border: 1px solid #cbd5e1; 
+              padding: 6px 8px; 
+              text-align: left; 
+              font-size: 10px; 
+              word-wrap: break-word;
+            }
+            th { 
+              background-color: #f8fafc; 
+              font-weight: bold; 
+              color: #334155; 
+            }
+            h1 { 
+              font-size: 18px;
+              margin: 0 0 8px 0; 
+              color: #0f172a; 
+              page-break-after: avoid;
+            }
+            h2 { 
+              font-size: 16px;
+              margin: 0 0 6px 0; 
+              color: #0f172a; 
+              page-break-after: avoid;
+            }
+            h3 { 
+              font-size: 14px;
+              margin: 0 0 5px 0; 
+              color: #0f172a; 
+              page-break-after: avoid;
+            }
+            .text-right { text-align: right; }
+            .text-center { text-align: center; }
+            .no-print, button, .lucide { display: none !important; }
+            canvas { 
+              max-width: 100% !important; 
+              height: auto !important; 
+            }
+            svg {
+              max-width: 100%;
+              height: auto;
+            }
+            .report-header {
+              margin-bottom: 15px;
+              padding-bottom: 10px;
+              border-bottom: 2px solid #334155;
+            }
+            .summary-box {
+              padding: 10px;
+              margin: 10px 0;
+              background-color: #f8fafc;
+              border: 1px solid #e2e8f0;
+            }
+          </style>
+        </head>
+        <body>
+          ${rawHtml}
+        </body>
+      </html>
+    `;
 
-  // Bungkus dengan struktur HTML dasar dan CSS untuk kertas A4
-  const fullHtml = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>${documentName}</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-          /* Pengaturan standar kertas A4 */
-          @page { size: A4; margin: 15mm; }
-          body { 
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
-            padding: 0; 
-            margin: 0; 
-            background: white; 
-            color: black; 
-          }
-          /* Reset styling khusus print */
-          * { box-sizing: border-box; }
-          table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px; }
-          th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; font-size: 12px; }
-          th { background-color: #f8fafc; font-weight: bold; color: #334155; }
-          h1, h2, h3 { margin: 0 0 10px 0; color: #0f172a; }
-          .text-right { text-align: right; }
-          .text-center { text-align: center; }
-          /* Sembunyikan elemen UI seperti tombol saat dicetak */
-          .no-print, button { display: none !important; }
-        </style>
-      </head>
-      <body>
-        ${rawHtml}
-      </body>
-    </html>
-  `;
-
-  try {
-    if (isNative) {
-      // Kirim string HTML langsung ke fungsi utama
-      return await printHtmlContent(fullHtml, documentName);
-    } else {
-      // Fallback untuk web
-      return await universalPrint(fullHtml, documentName);
+    try {
+      const printed = await printHtmlContent(fullHtml, documentName);
+      if (!printed) {
+        return await universalPrint(fullHtml, documentName);
+      }
+      return true;
+    } catch (err: any) {
+      console.error('[PrintReport] Android Error:', err);
+      toast.error(`Gagal mencetak: ${err.message || err}`);
+      return false;
     }
-  } catch (err: any) {
-    console.error('[PrintReport] Error:', err);
-    toast.error(`Gagal mencetak dokumen: ${err.message || err}`);
-    return false;
+  }
+
+  if (isNative) {
+    // CAPACITOR NATIVE (Non-Android / iOS): Convert HTML ke PNG dengan ukuran A4 penuh
+    toast.info(`Menyiapkan dokumen "${documentName}"...`);
+    
+    // Simpan style asli
+    const originalStyle = el.getAttribute('style') || '';
+    
+    // CRITICAL FIX: Inject <style> tag untuk override @media screen { display:none!important }
+    // Karena el.style.display = 'block' TIDAK CUKUP melawan !important di stylesheet
+    const forceVisibleStyle = document.createElement('style');
+    forceVisibleStyle.id = '__mesenae_force_print_visible__';
+    forceVisibleStyle.textContent = `
+      #${elementId},
+      #${elementId} * {
+        display: revert !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+      #${elementId} {
+        display: block !important;
+        position: absolute !important;
+        left: -9999px !important;
+        top: 0 !important;
+        z-index: 99999 !important;
+        width: 794px !important;
+        min-width: 794px !important;
+        max-width: 794px !important;
+        box-sizing: border-box !important;
+        background-color: #ffffff !important;
+        overflow: visible !important;
+      }
+    `;
+    document.head.appendChild(forceVisibleStyle);
+    
+    try {
+      // Juga set inline style sebagai backup
+      el.style.setProperty('display', 'block', 'important');
+      el.style.setProperty('position', 'absolute', 'important');
+      el.style.setProperty('left', '-9999px', 'important');
+      el.style.setProperty('top', '0', 'important');
+      el.style.setProperty('opacity', '1', 'important');
+      el.style.setProperty('visibility', 'visible', 'important');
+      el.style.setProperty('z-index', '99999', 'important');
+      el.style.setProperty('width', '794px', 'important');
+      el.style.setProperty('min-width', '794px', 'important');
+      el.style.setProperty('max-width', '794px', 'important');
+      el.style.setProperty('box-sizing', 'border-box', 'important');
+      el.style.setProperty('background-color', '#ffffff', 'important');
+      el.style.setProperty('overflow', 'visible', 'important');
+      
+      // Tunggu render DOM — lebih lama karena element baru saja di-force visible
+      await new Promise(resolve => setTimeout(resolve, 600));
+      
+      // Convert ke PNG dengan ukuran exact A4
+      const dataUrl = await toPng(el, {
+        cacheBust: true,
+        pixelRatio: 2, // Cukup tinggi tapi tidak bikin OOM
+        backgroundColor: '#ffffff',
+        width: 794, // Fixed A4 width
+        style: {
+          margin: '0',
+          padding: '15mm',
+          transform: 'scale(1)',
+        }
+      });
+      
+      // Hapus force-visible style dan restore style asli
+      forceVisibleStyle.remove();
+      if (originalStyle) {
+        el.setAttribute('style', originalStyle);
+      } else {
+        el.removeAttribute('style');
+      }
+      
+      if (!dataUrl || dataUrl.length < 100) {
+        console.error('[PrintReport] toPng() menghasilkan data kosong');
+        toast.error('Gagal merender dokumen — data kosong');
+        return false;
+      }
+      
+      // Langsung kirim dataUrl PNG (base64)
+      // printHtmlContent akan detect base64 → save file PNG → cordova printer dialog
+      console.log('[PrintReport] Sending PNG dataUrl directly, length:', dataUrl.length);
+      const printed = await printHtmlContent(dataUrl, documentName);
+      if (printed) {
+        return true;
+      }
+      
+      // Fallback: bungkus dalam HTML sederhana berisi <img> agar universalPrint tetap kirim PNG
+      const imgHtml = `<html><head><title>${documentName}</title><style>@page{margin:0}body{margin:0;padding:0;background:#fff}img{width:100%;height:auto;display:block}</style></head><body><img src="${dataUrl}" alt="${documentName}"/></body></html>`;
+      toast.info('Mencoba metode alternatif...');
+      return await universalPrint(imgHtml, documentName);
+      
+    } catch (err: any) {
+      // Restore style jika error
+      forceVisibleStyle.remove();
+      if (originalStyle) {
+        el.setAttribute('style', originalStyle);
+      } else {
+        el.removeAttribute('style');
+      }
+      
+      console.error('[PrintReport] Error converting to PNG:', err);
+      toast.error(`Gagal menyiapkan dokumen: ${err.message || err}`);
+      return false;
+    }
+  } else {
+    // WEB BROWSER: Kirim HTML langsung
+    toast.info(`Menyiapkan dokumen "${documentName}"...`);
+    
+    const rawHtml = el.outerHTML;
+    
+    const fullHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${documentName}</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <meta charset="UTF-8">
+          <style>
+            @page { 
+              size: A4 portrait; 
+              margin: 15mm 10mm; 
+            }
+            body { 
+              font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+              padding: 0; 
+              margin: 0; 
+              background: white; 
+              color: black; 
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            * { box-sizing: border-box; }
+            table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              margin-top: 10px; 
+              margin-bottom: 15px; 
+              page-break-inside: auto;
+            }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+            th, td { 
+              border: 1px solid #cbd5e1; 
+              padding: 6px 8px; 
+              text-align: left; 
+              font-size: 10px; 
+              word-wrap: break-word;
+            }
+            th { 
+              background-color: #f8fafc; 
+              font-weight: bold; 
+              color: #334155; 
+            }
+            h1 { 
+              font-size: 18px;
+              margin: 0 0 8px 0; 
+              color: #0f172a; 
+              page-break-after: avoid;
+            }
+            h2 { 
+              font-size: 16px;
+              margin: 0 0 6px 0; 
+              color: #0f172a; 
+              page-break-after: avoid;
+            }
+            h3 { 
+              font-size: 14px;
+              margin: 0 0 5px 0; 
+              color: #0f172a; 
+              page-break-after: avoid;
+            }
+            .text-right { text-align: right; }
+            .text-center { text-align: center; }
+            .no-print, button, .lucide { display: none !important; }
+            canvas { 
+              max-width: 100% !important; 
+              height: auto !important; 
+            }
+            svg {
+              max-width: 100%;
+              height: auto;
+            }
+            .report-header {
+              margin-bottom: 15px;
+              padding-bottom: 10px;
+              border-bottom: 2px solid #334155;
+            }
+            .summary-box {
+              padding: 10px;
+              margin: 10px 0;
+              background-color: #f8fafc;
+              border: 1px solid #e2e8f0;
+            }
+          </style>
+        </head>
+        <body>
+          ${rawHtml}
+        </body>
+      </html>
+    `;
+
+    try {
+      const printed = await printHtmlContent(fullHtml, documentName);
+      if (!printed) {
+        return await universalPrint(fullHtml, documentName);
+      }
+      return true;
+    } catch (err: any) {
+      console.error('[PrintReport] Error:', err);
+      toast.error(`Gagal mencetak: ${err.message || err}`);
+      return false;
+    }
   }
 }
+

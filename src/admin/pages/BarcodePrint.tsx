@@ -81,69 +81,103 @@ export default function BarcodePrint() {
       const isA4 = paperSize === 'a4';
 
       if (isNative) {
-        // Jika Thermal ATAU A4 tapi hanya 1 halaman, aman pakai gambar.
-        // Lebih dari itu dilewati untuk mencegah Out-of-Memory (OOM) WebView crash.
-        if (paperSize === 'thermal' || chunkedA4Items.length <= 1) {
-          try {
-            toast.info('Menyiapkan halaman cetak native...');
-            
-            // Simpan styles & class asli untuk di-restore
-            const elementsToClean = Array.from(printEl.querySelectorAll('.a4-page, .thermal-page, .scaling-wrapper, .scaling-wrapper-thermal'));
-            const originalStyles = elementsToClean.map(el => el.getAttribute('style') || '');
-            
-            // Bersihkan style dan classes pembungkus sementara agar toPng merasterisasi layout 100% asli
-            elementsToClean.forEach(el => el.removeAttribute('style'));
-            elementsToClean.forEach(el => {
-              el.classList.remove('shadow-xl', 'border', 'border-gray-300', 'a4-page-scaled');
-            });
+        // SELALU gunakan PNG capture di Capacitor native (termasuk multi-halaman A4)
+        try {
+          toast.info('Menyiapkan halaman cetak native...');
+          
+          // Simpan styles & class asli untuk di-restore
+          const elementsToClean = Array.from(printEl.querySelectorAll('.a4-page, .thermal-page, .scaling-wrapper, .scaling-wrapper-thermal'));
+          const originalStyles = elementsToClean.map(el => el.getAttribute('style') || '');
+          
+          // Bersihkan style dan classes pembungkus sementara agar toPng merasterisasi layout 100% asli
+          elementsToClean.forEach(el => el.removeAttribute('style'));
+          elementsToClean.forEach(el => {
+            el.classList.remove('shadow-xl', 'border', 'border-gray-300', 'a4-page-scaled');
+          });
 
-            let dataUrl = '';
-            try {
+          let dataUrl = '';
+          try {
+            if (paperSize === 'a4' && chunkedA4Items.length > 1) {
+              // Multi-halaman A4: capture per halaman, gabungkan di canvas vertikal
+              const pages = Array.from(printEl.querySelectorAll('.a4-page'));
+              const pageImages: HTMLImageElement[] = [];
+              
+              for (const page of pages) {
+                const pageDataUrl = await toPng(page as HTMLElement, {
+                  cacheBust: true,
+                  fontEmbedCSS: '',
+                  pixelRatio: 1.5,
+                  backgroundColor: '#ffffff'
+                });
+                const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+                  const image = new Image();
+                  image.onload = () => resolve(image);
+                  image.onerror = reject;
+                  image.src = pageDataUrl;
+                });
+                pageImages.push(img);
+              }
+              
+              if (pageImages.length > 0) {
+                // Gabungkan semua halaman secara vertikal ke satu canvas
+                const totalHeight = pageImages.reduce((sum, img) => sum + img.height, 0);
+                const maxWidth = Math.max(...pageImages.map(img => img.width));
+                const combinedCanvas = document.createElement('canvas');
+                combinedCanvas.width = maxWidth;
+                combinedCanvas.height = totalHeight;
+                const ctx = combinedCanvas.getContext('2d');
+                if (ctx) {
+                  ctx.fillStyle = '#ffffff';
+                  ctx.fillRect(0, 0, maxWidth, totalHeight);
+                  let yOffset = 0;
+                  for (const img of pageImages) {
+                    ctx.drawImage(img, 0, yOffset);
+                    yOffset += img.height;
+                  }
+                  dataUrl = combinedCanvas.toDataURL('image/png');
+                  // Cleanup canvas
+                  combinedCanvas.width = 0;
+                  combinedCanvas.height = 0;
+                }
+              }
+            } else {
+              // Single page atau thermal: capture seluruh printEl
               dataUrl = await toPng(printEl, {
                 cacheBust: true,
                 fontEmbedCSS: '',
                 pixelRatio: 1.5,
                 backgroundColor: '#ffffff'
               });
-            } finally {
-              // Restore styles asli
-              elementsToClean.forEach((el, idx) => {
-                if (originalStyles[idx]) el.setAttribute('style', originalStyles[idx]);
-                else el.removeAttribute('style');
-              });
-              // Restore classes asli
-              elementsToClean.forEach(el => {
-                if (el.classList.contains('a4-page')) {
-                  el.classList.add('shadow-xl', 'border', 'border-gray-300', 'a4-page-scaled');
-                } else if (el.classList.contains('thermal-page')) {
-                  el.classList.add('shadow-xl', 'border', 'border-gray-300');
-                }
-              });
             }
+          } finally {
+            // Restore styles asli
+            elementsToClean.forEach((el, idx) => {
+              if (originalStyles[idx]) el.setAttribute('style', originalStyles[idx]);
+              else el.removeAttribute('style');
+            });
+            // Restore classes asli
+            elementsToClean.forEach(el => {
+              if (el.classList.contains('a4-page')) {
+                el.classList.add('shadow-xl', 'border', 'border-gray-300', 'a4-page-scaled');
+              } else if (el.classList.contains('thermal-page')) {
+                el.classList.add('shadow-xl', 'border', 'border-gray-300');
+              }
+            });
+          }
 
-            const fullHtml = `
-              <html>
-                <head>
-                  <title>Cetak_${printMode === 'barcode' ? 'Barcode' : 'Label'}</title>
-                  <style>
-                    @page { margin: 0; size: auto; }
-                    body { margin: 0; padding: 0; background: #fff; display: flex; justify-content: center; align-items: flex-start; }
-                    .wrap { padding: 0; display: flex; justify-content: center; width: 100%; }
-                    img { width: 100%; max-width: 100%; height: auto; display: block; margin: 0 auto; }
-                  </style>
-                </head>
-                <body>
-                  <div class="wrap"><img src="${dataUrl}" /></div>
-                </body>
-              </html>
-            `;
-            const printed = await printHtmlContent(fullHtml, `Cetak_${printMode === 'barcode' ? 'Barcode' : 'Label'}`);
+          if (dataUrl && dataUrl.length > 100) {
+            // Kirim PNG ke dialog cetak native (cordova-plugin-printer)
+            const printed = await printHtmlContent(dataUrl, `Cetak_${printMode === 'barcode' ? 'Barcode' : 'Label'}`);
             if (printed) {
               return;
             }
-          } catch (e) {
-            console.warn('toPng native print failed, falling back to HTML print:', e);
+            // Fallback: bungkus dalam HTML berisi <img> agar universalPrint tetap kirim PNG
+            const imgHtml = `<html><head><title>Cetak_${printMode === 'barcode' ? 'Barcode' : 'Label'}</title><style>@page{margin:0}body{margin:0;padding:0;background:#fff}img{width:100%;height:auto;display:block}</style></head><body><img src="${dataUrl}" alt="Cetak"/></body></html>`;
+            await universalPrint(imgHtml, `Cetak_${printMode === 'barcode' ? 'Barcode' : 'Label'}`);
+            return;
           }
+        } catch (e) {
+          console.warn('toPng native print failed, falling back to HTML print:', e);
         }
       }
 
@@ -219,6 +253,83 @@ export default function BarcodePrint() {
               /* General items */
               .a4-page *, .thermal-page * {
                 box-sizing: border-box !important;
+              }
+              
+              /* Barcode Print Styling */
+              .barcode-print-item {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                text-align: center !important;
+                background-color: white !important;
+                color: black !important;
+                overflow: hidden !important;
+                border: 1px dashed #d1d5db !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+                padding: 4px !important;
+              }
+              .a4-page .barcode-print-item {
+                height: 25mm !important;
+              }
+              .thermal-page .barcode-print-item {
+                height: 30mm !important;
+              }
+              .barcode-print-name {
+                font-size: 9px !important;
+                font-weight: bold !important;
+                text-align: center !important;
+                line-height: 1.25 !important;
+                width: 100% !important;
+                margin: 0 0 2px 0 !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                padding: 0 4px !important;
+                box-sizing: border-box !important;
+                display: block !important;
+              }
+              .barcode-print-wrapper {
+                margin-top: 2px !important;
+                transform: scale(0.7) !important;
+                transform-origin: top center !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                width: 100% !important;
+              }
+              .barcode-print-wrapper svg {
+                margin: 0 auto !important;
+                display: block !important;
+              }
+              .label-print-details {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                flex: 1 !important;
+                width: 100% !important;
+                text-align: center !important;
+              }
+              .label-print-price {
+                font-size: 14px !important;
+                font-weight: 900 !important;
+                letter-spacing: -0.025em !important;
+                margin: 0 !important;
+                text-align: center !important;
+                display: block !important;
+                width: 100% !important;
+              }
+              .label-print-sku {
+                font-size: 7px !important;
+                color: #6b7280 !important;
+                font-family: monospace !important;
+                margin: 2px 0 0 0 !important;
+                text-align: center !important;
+                display: block !important;
+                width: 100% !important;
               }
             </style>
           </head>
@@ -612,12 +723,34 @@ export default function BarcodePrint() {
                         {chunk.map((item, i) => (
                           <div 
                             key={i} 
-                            className="flex flex-col items-center justify-center bg-white text-black overflow-hidden border border-dashed border-gray-300 w-full h-[25mm] p-1"
+                            className="barcode-print-item flex flex-col items-center justify-center bg-white text-black overflow-hidden border border-dashed border-gray-300 w-full h-[25mm] p-1"
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              textAlign: 'center',
+                            }}
                           >
-                            <p className="text-[9px] font-bold text-center leading-tight truncate w-full px-1">{item.name}</p>
+                            <p 
+                              className="barcode-print-name text-[9px] font-bold text-center leading-tight truncate w-full px-1"
+                              style={{
+                                textAlign: 'center',
+                              }}
+                            >
+                              {item.name}
+                            </p>
                             
                             {printMode === 'barcode' ? (
-                              <div className="mt-0.5 scale-[0.7] transform origin-top">
+                              <div 
+                                className="barcode-print-wrapper mt-0.5 scale-[0.7] transform origin-top"
+                                style={{
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                              >
                                 <Barcode 
                                   value={item.sku} 
                                   width={1.5} 
@@ -630,9 +763,32 @@ export default function BarcodePrint() {
                                 />
                               </div>
                             ) : (
-                              <div className="flex flex-col items-center justify-center flex-1 w-full">
-                                <p className="text-[14px] font-black tracking-tight">{FORMAT_IDR(item.price)}</p>
-                                <p className="text-[7px] text-gray-500 font-mono mt-0.5">{item.sku}</p>
+                              <div 
+                                className="label-print-details flex flex-col items-center justify-center flex-1 w-full"
+                                style={{
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  textAlign: 'center',
+                                }}
+                              >
+                                <p 
+                                  className="label-print-price text-[14px] font-black tracking-tight"
+                                  style={{
+                                    textAlign: 'center',
+                                  }}
+                                >
+                                  {FORMAT_IDR(item.price)}
+                                </p>
+                                <p 
+                                  className="label-print-sku text-[7px] text-gray-500 font-mono mt-0.5"
+                                  style={{
+                                    textAlign: 'center',
+                                  }}
+                                >
+                                  {item.sku}
+                                </p>
                               </div>
                             )}
                           </div>
@@ -660,12 +816,34 @@ export default function BarcodePrint() {
                       {renderItems.map((item, i) => (
                         <div 
                           key={i} 
-                          className="flex flex-col items-center justify-center bg-white text-black overflow-hidden border border-dashed border-gray-300 w-full h-[30mm] p-1 shrink-0"
+                          className="barcode-print-item flex flex-col items-center justify-center bg-white text-black overflow-hidden border border-dashed border-gray-300 w-full h-[30mm] p-1 shrink-0"
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            textAlign: 'center',
+                          }}
                         >
-                          <p className="text-[9px] font-bold text-center leading-tight truncate w-full px-1">{item.name}</p>
+                          <p 
+                            className="barcode-print-name text-[9px] font-bold text-center leading-tight truncate w-full px-1"
+                            style={{
+                              textAlign: 'center',
+                            }}
+                          >
+                            {item.name}
+                          </p>
                           
                           {printMode === 'barcode' ? (
-                            <div className="mt-0.5 scale-[0.7] transform origin-top">
+                            <div 
+                              className="barcode-print-wrapper mt-0.5 scale-[0.7] transform origin-top"
+                              style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
                               <Barcode 
                                 value={item.sku} 
                                 width={1.5} 
@@ -678,9 +856,32 @@ export default function BarcodePrint() {
                               />
                             </div>
                           ) : (
-                            <div className="flex flex-col items-center justify-center flex-1 w-full">
-                              <p className="text-[14px] font-black tracking-tight">{FORMAT_IDR(item.price)}</p>
-                              <p className="text-[7px] text-gray-500 font-mono mt-0.5">{item.sku}</p>
+                            <div 
+                              className="label-print-details flex flex-col items-center justify-center flex-1 w-full"
+                              style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                textAlign: 'center',
+                              }}
+                            >
+                              <p 
+                                className="label-print-price text-[14px] font-black tracking-tight"
+                                style={{
+                                  textAlign: 'center',
+                                }}
+                              >
+                                {FORMAT_IDR(item.price)}
+                              </p>
+                              <p 
+                                className="label-print-sku text-[7px] text-gray-500 font-mono mt-0.5"
+                                style={{
+                                  textAlign: 'center',
+                                }}
+                              >
+                                {item.sku}
+                              </p>
                             </div>
                           )}
                         </div>
@@ -725,6 +926,81 @@ export default function BarcodePrint() {
                         margin: 0 !important;
                         box-shadow: none !important;
                         border: none !important;
+                      }
+                      .barcode-print-item {
+                        display: flex !important;
+                        flex-direction: column !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        text-align: center !important;
+                        background-color: white !important;
+                        color: black !important;
+                        overflow: hidden !important;
+                        border: 1px dashed #d1d5db !important;
+                        width: 100% !important;
+                        box-sizing: border-box !important;
+                        padding: 4px !important;
+                      }
+                      .a4-page .barcode-print-item {
+                        height: 25mm !important;
+                      }
+                      .thermal-page .barcode-print-item {
+                        height: 30mm !important;
+                      }
+                      .barcode-print-name {
+                        font-size: 9px !important;
+                        font-weight: bold !important;
+                        text-align: center !important;
+                        line-height: 1.25 !important;
+                        width: 100% !important;
+                        margin: 0 0 2px 0 !important;
+                        white-space: nowrap !important;
+                        overflow: hidden !important;
+                        text-overflow: ellipsis !important;
+                        padding: 0 4px !important;
+                        box-sizing: border-box !important;
+                        display: block !important;
+                      }
+                      .barcode-print-wrapper {
+                        margin-top: 2px !important;
+                        transform: scale(0.7) !important;
+                        transform-origin: top center !important;
+                        display: flex !important;
+                        flex-direction: column !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        width: 100% !important;
+                      }
+                      .barcode-print-wrapper svg {
+                        margin: 0 auto !important;
+                        display: block !important;
+                      }
+                      .label-print-details {
+                        display: flex !important;
+                        flex-direction: column !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        flex: 1 !important;
+                        width: 100% !important;
+                        text-align: center !important;
+                      }
+                      .label-print-price {
+                        font-size: 14px !important;
+                        font-weight: 900 !important;
+                        letter-spacing: -0.025em !important;
+                        margin: 0 !important;
+                        text-align: center !important;
+                        display: block !important;
+                        width: 100% !important;
+                      }
+                      .label-print-sku {
+                        font-size: 7px !important;
+                        color: #6b7280 !important;
+                        font-family: monospace !important;
+                        margin: 2px 0 0 0 !important;
+                        text-align: center !important;
+                        display: block !important;
+                        width: 100% !important;
                       }
                     }
                   `}

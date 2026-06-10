@@ -23,6 +23,20 @@ const VAPID_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY as string;
 // Shared Set to prevent duplicate notifications in the foreground
 export const processedNotificationIds = new Set<string>();
 
+// Auto-cleanup old notification IDs every 5 minutes
+if (typeof window !== 'undefined') {
+  setInterval(() => {
+    const size = processedNotificationIds.size;
+    if (size > 100) {
+      // Keep only the last 50 entries (arbitrary cleanup)
+      const arr = Array.from(processedNotificationIds);
+      processedNotificationIds.clear();
+      arr.slice(-50).forEach(id => processedNotificationIds.add(id));
+      console.log(`[FCM] Cleaned up notification ID cache: ${size} -> ${processedNotificationIds.size}`);
+    }
+  }, 5 * 60 * 1000);
+}
+
 // Helper to extract receipt numbers (e.g. TX1234567890) from notification content
 export const extractReceiptNumber = (title: string, body: string): string | null => {
   const combined = `${title} ${body}`;
@@ -59,9 +73,11 @@ export const requestForToken = async (
               name: 'Notifikasi Pesanan',
               description: 'Notifikasi push saat ada pesanan masuk',
               importance: 5, // IMPORTANCE_HIGH
-              sound: 'ding', // ding.mp3 in res/raw/ding.mp3
+              sound: 'ding', // Nama file di res/raw/ tanpa extension
               visibility: 1, // VISIBILITY_PUBLIC
-              vibration: true
+              vibration: true,
+              lights: true,
+              lightColor: '#3b82f6'
             });
             console.log("[FCM] Android push channel 'mesenae_orders' created.");
           } catch (channelErr) {
@@ -289,9 +305,11 @@ export const initPushListeners = async (): Promise<void> => {
           name: 'Notifikasi Pesanan',
           description: 'Notifikasi push saat ada pesanan masuk',
           importance: 5, // IMPORTANCE_HIGH
-          sound: 'ding',
+          sound: 'ding', // Nama file di res/raw/ tanpa extension
           visibility: 1, // VISIBILITY_PUBLIC
           vibration: true,
+          lights: true,
+          lightColor: '#3b82f6'
         });
         console.log('[FCM] LocalNotifications channel mesenae_orders created at startup.');
       } catch (channelErr) {
@@ -406,17 +424,18 @@ export const initPushListeners = async (): Promise<void> => {
                 body: body || 'Ada pembaruan pesanan.',
                 id: notificationId,
                 schedule: { at: new Date(Date.now() + 100) },
-                sound: soundFile,
+                sound: isStatusUpdate ? 'beep' : 'ding', // Native format tanpa extension
                 smallIcon: 'ic_notification',
                 iconColor: activeThemeColor,
                 channelId: 'mesenae_orders',
                 extra: {
-                  url: notificationUrl
+                  url: notificationUrl,
+                  receiptNumber: receiptNumber
                 }
               }
             ]
           });
-          console.log(`[FCM] Local notification scheduled in foreground for receipt #${receiptNumber}`);
+          console.log(`[FCM] Local notification scheduled REALTIME in foreground for receipt #${receiptNumber}`);
         } catch (localErr) {
           console.warn('[FCM] Failed to trigger Local Notification in foreground:', localErr);
         }
