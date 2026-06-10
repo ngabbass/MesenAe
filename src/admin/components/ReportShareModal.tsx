@@ -209,13 +209,13 @@ _MesenAe — Aplikasi Kasir UMKM_`.trim();
         <div className="relative w-full sm:max-w-[500px] max-h-[92dvh] bg-background rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden">
 
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b shrink-0 bg-primary">
-            <div className="flex items-center gap-2.5">
-              <Share2 className="w-5 h-5 text-white" />
-              <h3 className="font-bold text-base text-white">Bagikan Laporan</h3>
+          <div className="flex items-center justify-between px-6 py-5 border-b border-border/50 shrink-0 bg-muted/10">
+            <div className="flex items-center gap-2">
+              <Share2 className="w-5 h-5 text-primary" />
+              <h3 className="font-extrabold text-base sm:text-lg text-foreground">Bagikan Laporan</h3>
             </div>
-            <button onClick={onClose} className="p-1.5 bg-white/10 hover:bg-white/20 rounded-full transition-colors">
-              <X className="w-5 h-5 text-white" />
+            <button onClick={onClose} className="rounded-full bg-slate-100 p-2 text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100 focus:outline-none">
+              <X className="w-4 h-4" />
             </button>
           </div>
 

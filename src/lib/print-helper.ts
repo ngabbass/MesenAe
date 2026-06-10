@@ -1,112 +1,9 @@
-import { Capacitor, registerPlugin } from '@capacitor/core';
+import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
 import { toPng } from 'html-to-image';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
-
-interface NativePrintPluginType {
-  printHtml(options: { html: string; title?: string; mediaSize?: string }): Promise<{ success: boolean }>;
-  listBluetoothPrinters(): Promise<{ printers: { name: string; address: string; id: string }[] }>;
-  printBluetoothEscPos(options: { address: string; data: string }): Promise<{ success: boolean }>;
-}
-
-const NativePrint = registerPlugin<NativePrintPluginType>('NativePrint');
-
-// Polyfill window.bluetoothSerial to redirect SPP commands to NativePrint on Android
-const polyfillBluetoothSerial = () => {
-  if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android') {
-    // Keep track of active connection state and buffer
-    (window as any)._activeBluetoothAddress = null;
-    (window as any)._bluetoothWriteBuffer = null;
-
-    // @ts-ignore
-    window.bluetoothSerial = {
-      disconnect: (success?: () => void, failure?: (err: any) => void) => {
-        const address = (window as any)._activeBluetoothAddress;
-        const buffer = (window as any)._bluetoothWriteBuffer;
-        
-        if (address && buffer && buffer.length > 0) {
-          // Convert binary buffer to base64 safely
-          let binary = '';
-          const len = buffer.byteLength;
-          for (let i = 0; i < len; i++) {
-            binary += String.fromCharCode(buffer[i]);
-          }
-          const base64Data = window.btoa(binary);
-          
-          // Clear active session
-          (window as any)._bluetoothWriteBuffer = null;
-          (window as any)._activeBluetoothAddress = null;
-
-          NativePrint.printBluetoothEscPos({ address, data: base64Data })
-            .then(() => {
-              if (success) success();
-            })
-            .catch((err: any) => {
-              console.warn('[BluetoothSerial Polyfill] Direct write failed:', err);
-              if (failure) failure(err);
-            });
-        } else {
-          (window as any)._bluetoothWriteBuffer = null;
-          (window as any)._activeBluetoothAddress = null;
-          if (success) success();
-        }
-      },
-      list: (success: (results: any[]) => void, failure: (err: any) => void) => {
-        NativePrint.listBluetoothPrinters()
-          .then((res: any) => {
-            success(res.printers || []);
-          })
-          .catch((err: any) => {
-            if (failure) failure(err);
-          });
-      },
-      connect: (address: string, success: () => void, failure: (err: any) => void) => {
-        (window as any)._activeBluetoothAddress = address;
-        (window as any)._bluetoothWriteBuffer = new Uint8Array(0);
-        if (success) success();
-      },
-      write: (dataBuffer: ArrayBuffer, success: () => void, failure: (err: any) => void) => {
-        const currentBuffer = (window as any)._bluetoothWriteBuffer;
-        if (currentBuffer) {
-          const incoming = new Uint8Array(dataBuffer);
-          const newBuffer = new Uint8Array(currentBuffer.length + incoming.length);
-          newBuffer.set(currentBuffer);
-          newBuffer.set(incoming, currentBuffer.length);
-          (window as any)._bluetoothWriteBuffer = newBuffer;
-          if (success) success();
-        } else {
-          const address = (window as any)._activeBluetoothAddress;
-          if (!address) {
-            if (failure) failure("No printer connected");
-            return;
-          }
-          const incoming = new Uint8Array(dataBuffer);
-          let binary = '';
-          const len = incoming.byteLength;
-          for (let i = 0; i < len; i++) {
-            binary += String.fromCharCode(incoming[i]);
-          }
-          const base64Data = window.btoa(binary);
-
-          NativePrint.printBluetoothEscPos({ address, data: base64Data })
-            .then(() => {
-              if (success) success();
-            })
-            .catch((err: any) => {
-              if (failure) failure(err);
-            });
-        }
-      }
-    };
-  }
-};
-
-try {
-  polyfillBluetoothSerial();
-} catch (e) {
-  console.error('[BluetoothSerial Polyfill] Failed to initialize:', e);
-}
+import { Printer } from '@capgo/capacitor-printer';
 
 /**
  * cleanOldPrintCache — Membersihkan file print lama di folder Cache Capacitor.
@@ -160,8 +57,8 @@ export async function printHtmlContent(htmlContent: string, documentName: string
   const isNative = Capacitor.isNativePlatform();
   if (!isNative) return false;
 
-  // Coba gunakan plugin NativePrint di Android
-  if (Capacitor.getPlatform() === 'android') {
+  // Coba gunakan plugin @capgo/capacitor-printer di Android & iOS
+  if (Capacitor.getPlatform() === 'android' || Capacitor.getPlatform() === 'ios') {
     try {
       const trimmed = htmlContent.trim();
       let isBase64Image = false;
@@ -202,17 +99,14 @@ export async function printHtmlContent(htmlContent: string, documentName: string
       }
 
       toast.info('Membuka dialog cetak native...');
-      const res = await NativePrint.printHtml({
-        html: printableHtml,
-        title: documentName,
-        mediaSize: (documentName.toLowerCase().includes('laporan') || documentName.toLowerCase().includes('cetak_')) ? 'A4' : 'default'
+      await Printer.printHtml({
+        name: documentName,
+        html: printableHtml
       });
-      if (res.success) {
-        toast.success(`Cetak "${documentName}" berhasil!`);
-        return true;
-      }
+      toast.success(`Cetak "${documentName}" berhasil!`);
+      return true;
     } catch (err: any) {
-      console.warn('[Print] NativePrint failed, falling back to legacy methods...', err);
+      console.warn('[Print] Capgo Printer printHtml failed:', err);
     }
   }
 
@@ -326,20 +220,17 @@ export async function universalPrint(htmlContent: string, documentName: string =
   }
 
   if (isNative) {
-    if (Capacitor.getPlatform() === 'android') {
+    if (Capacitor.getPlatform() === 'android' || Capacitor.getPlatform() === 'ios') {
       try {
         toast.info('Membuka dialog cetak native...');
-        const res = await NativePrint.printHtml({
-          html: printableHtml,
-          title: documentName,
-          mediaSize: (documentName.toLowerCase().includes('laporan') || documentName.toLowerCase().includes('cetak_')) ? 'A4' : 'default'
+        await Printer.printHtml({
+          name: documentName,
+          html: printableHtml
         });
-        if (res.success) {
-          toast.success(`Cetak "${documentName}" berhasil!`);
-          return true;
-        }
+        toast.success(`Cetak "${documentName}" berhasil!`);
+        return true;
       } catch (err: any) {
-        console.warn('[universalPrint] NativePrint failed, trying legacy methods...', err);
+        console.warn('[universalPrint] Capgo Printer printHtml failed:', err);
       }
     }
 
