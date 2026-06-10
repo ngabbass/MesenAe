@@ -128,7 +128,7 @@ export function useRealtimeOrders() {
                     body: `Pesanan #${receiptNum} dari ${order.customer_name || 'Tamu'} (Meja: ${order.table_number || 'Bawa Pulang'})`,
                     id: notificationId,
                     schedule: { at: new Date(Date.now() + 100) },
-                    sound: 'ding.mp3',
+                    sound: 'ding',
                     smallIcon: 'ic_notification',
                     iconColor: activeThemeColor,
                     channelId: 'mesenae_orders',

@@ -59,6 +59,17 @@ export const requestForToken = async (
         if (permStatus.receive === 'prompt') {
           permStatus = await PushNotifications.requestPermissions();
         }
+
+        // Also check and request LocalNotifications permission (required for Android 13+)
+        try {
+          const localPerm = await LocalNotifications.checkPermissions();
+          if (localPerm.display !== 'granted') {
+            await LocalNotifications.requestPermissions();
+          }
+        } catch (localErr) {
+          console.warn("[FCM] Failed to check/request LocalNotifications permission:", localErr);
+        }
+
         if (permStatus.receive !== 'granted') {
           console.warn("[FCM] Native Push permission denied.");
           return null;
@@ -297,6 +308,16 @@ export const sendPushToCustomer = async (
 export const initPushListeners = async (): Promise<void> => {
   if (!Capacitor.isNativePlatform()) return;
   try {
+    // Check and request LocalNotifications permission (required for Android 13+)
+    try {
+      const localPerm = await LocalNotifications.checkPermissions();
+      if (localPerm.display !== 'granted') {
+        await LocalNotifications.requestPermissions();
+      }
+    } catch (localErr) {
+      console.warn("[FCM] Failed to check/request LocalNotifications permission at startup:", localErr);
+    }
+
     // Create local notification channel once at startup (Android 8.0+)
     if (Capacitor.getPlatform() === 'android') {
       try {

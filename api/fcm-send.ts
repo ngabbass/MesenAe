@@ -64,8 +64,8 @@ export default async function handler(req: any, res: any) {
         priority: "high",
         notification: {
           sound:         "ding",
-          priority:      "max",
           channelId:     "mesenae_orders",
+          clickAction:   "FCM_PLUGIN_ACTIVITY",
           // Pola getar (ms): jeda, getar, jeda, getar, ...
           vibrateTimingsMillis: [0, 500, 110, 500, 110, 450, 110, 200, 110, 170, 40, 500],
           defaultVibrateTimings: false,
