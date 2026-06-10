@@ -126,6 +126,8 @@ interface CashierContextType {
   filtered: Product[];
   subtotal: number;
   txDiscountAmount: number;
+  ppnAmount: number;
+  adminFee: number;
   taxAndService: number;
   total: number;
   totalPaidSoFar: number;
@@ -276,19 +278,31 @@ export const CashierProvider: React.FC<{ children: React.ReactNode }> = ({ child
       : txDiscountType === 'nominal' ? Number(txDiscountValue) || 0 : 0;
   }, [subtotal, txDiscountType, txDiscountValue]);
 
-  const taxAndService = useMemo(() => {
-    const currentMethod = paymentMethods?.find(m => m.id!.toString() === paymentMethodId);
-    if (!currentMethod || currentMethod.provider === 'manual') return 0;
-    
+  const ppnAmount = useMemo(() => {
+    if (!storeSettings?.enableTax) return 0;
     const baseTotal = Math.max(0, subtotal - txDiscountAmount);
-    
-    if (currentMethod.category === 'qris') return Math.round(baseTotal * 0.007);
-    if (currentMethod.category === 'e-wallet') return Math.round(baseTotal * 0.02);
-    if (currentMethod.category === 'transfer') return 4000;
-    if (currentMethod.category === 'lainnya') return Math.round(baseTotal * 0.03);
-    
+    return Math.round(baseTotal * (storeSettings.taxPercentage || 0) / 100);
+  }, [storeSettings, subtotal, txDiscountAmount]);
+
+  const adminFee = useMemo(() => {
+    const currentMethod = paymentMethods?.find(m => m.id!.toString() === paymentMethodId);
+    const isMidtrans = currentMethod && currentMethod.provider !== 'manual';
+
+    if (isMidtrans) {
+      const baseTotal = Math.max(0, subtotal - txDiscountAmount);
+      if (currentMethod.category === 'qris') return Math.round(baseTotal * 0.007);
+      if (currentMethod.category === 'e-wallet') return Math.round(baseTotal * 0.02);
+      if (currentMethod.category === 'transfer') return 4000;
+      if (currentMethod.category === 'lainnya') return Math.round(baseTotal * 0.03);
+    } else if (storeSettings?.enableAdminFee) {
+      return storeSettings.adminFeeValue || 0;
+    }
     return 0;
-  }, [paymentMethodId, paymentMethods, subtotal, txDiscountAmount]);
+  }, [paymentMethodId, paymentMethods, subtotal, txDiscountAmount, storeSettings]);
+
+  const taxAndService = useMemo(() => {
+    return ppnAmount + adminFee;
+  }, [ppnAmount, adminFee]);
 
   const total = useMemo(() => Math.max(0, subtotal - txDiscountAmount) + taxAndService, [subtotal, txDiscountAmount, taxAndService]);
   const totalPaidSoFar = useMemo(() => payments.reduce((sum, p) => sum + p.amount, 0), [payments]);
@@ -444,6 +458,8 @@ export const CashierProvider: React.FC<{ children: React.ReactNode }> = ({ child
       discount_value: Number(txDiscountValue) || 0,
       discount_amount: txDiscountAmount,
       tax_and_service: taxAndService,
+      tax_amount: ppnAmount,
+      admin_fee: adminFee,
       total,
       customer_name: customerName.trim() || null,
       table_number: tableNumber.trim() || null,
@@ -691,6 +707,8 @@ export const CashierProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const finalCustomerName = (overrideData ? overrideData.customerName : customerName) || '';
       const finalTableNumber = (overrideData ? overrideData.tableNumber : tableNumber) || '';
       const finalTaxAndService = overrideData ? overrideData.taxAndService : taxAndService;
+      const finalTaxAmount = overrideData ? overrideData.taxAmount : ppnAmount;
+      const finalAdminFee = overrideData ? overrideData.adminFee : adminFee;
       const finalTotal = overrideData ? overrideData.total : total;
 
       const txNeedsKitchen = cart.some(c => categories.find(cat => String(cat.id) === String(c.product.categoryId))?.needsKitchen !== false);
@@ -711,6 +729,8 @@ export const CashierProvider: React.FC<{ children: React.ReactNode }> = ({ child
         discount_value: Number(txDiscountValue) || 0,
         discount_amount: txDiscountAmount,
         tax_and_service: finalTaxAndService,
+        tax_amount: finalTaxAmount,
+        admin_fee: finalAdminFee,
         total: finalTotal,
         payment_method_id: primaryMethodId,
         payment_amount: finalPaymentAmount,
@@ -986,6 +1006,8 @@ export const CashierProvider: React.FC<{ children: React.ReactNode }> = ({ child
         filtered,
         subtotal,
         txDiscountAmount,
+        ppnAmount,
+        adminFee,
         taxAndService,
         total,
         totalPaidSoFar,

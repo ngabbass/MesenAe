@@ -21,6 +21,8 @@ export interface MesenAeReportData {
   totalExpenses?: number;
   netProfit?: number;
   expensesList?: { date: string; title: string; categoryName: string; amount: number; notes?: string }[];
+  totalTaxAmount?: number;
+  totalAdminFee?: number;
 }
 
 interface ReportPrintProps {
@@ -193,14 +195,16 @@ function PrintLineChart({
 
 // ── SVG Donut / Pie Chart ─────────────────────────────────────────────────────
 function PrintPieChart({
-  netSales, totalHpp, grossProfit, totalDiscount, primaryColor
+  netSales, totalHpp, grossProfit, totalDiscount, totalTaxAmount, totalAdminFee, primaryColor
 }: {
-  netSales: number; totalHpp: number; grossProfit: number; totalDiscount: number; primaryColor: string;
+  netSales: number; totalHpp: number; grossProfit: number; totalDiscount: number; totalTaxAmount?: number; totalAdminFee?: number; primaryColor: string;
 }) {
   const segments = [
     { label: 'Laba Kotor', value: Math.max(0, grossProfit), color: '#10b981' },
     { label: 'HPP / Modal', value: Math.max(0, totalHpp), color: primaryColor },
     { label: 'Diskon', value: Math.max(0, totalDiscount), color: '#f59e0b' },
+    { label: 'Pajak (PPN)', value: Math.max(0, totalTaxAmount || 0), color: '#3b82f6' },
+    { label: 'Biaya Admin', value: Math.max(0, totalAdminFee || 0), color: '#6366f1' },
   ].filter(s => s.value > 0);
 
   const total = segments.reduce((s, seg) => s + seg.value, 0) || 1;
@@ -243,14 +247,19 @@ function PrintPieChart({
       <text x={cx} y={cy + 7} fontSize="6px" fill="#64748b" textAnchor="middle" fontWeight="600">Laba</text>
 
       {/* Legend */}
-      {arcs.map((arc, i) => (
-        <g key={arc.label} transform={`translate(138, ${12 + i * 36})`}>
-          <rect x={0} y={0} width={10} height={10} rx={2} fill={arc.color} />
-          <text x={14} y={8} fontSize="7.5px" fill="#334155" fontWeight="700">{arc.label}</text>
-          <text x={14} y={20} fontSize="7px" fill="#0f172a" fontWeight="900">Rp {rp(arc.value)}</text>
-          <text x={14} y={30} fontSize="6px" fill="#94a3b8">{(arc.pct * 100).toFixed(1)}%</text>
-        </g>
-      ))}
+      {arcs.map((arc, i) => {
+        const spacing = arcs.length > 3 ? 22 : 36;
+        const startY = arcs.length > 3 ? 8 : 12;
+        return (
+          <g key={arc.label} transform={`translate(138, ${startY + i * spacing})`}>
+            <rect x={0} y={0} width={8} height={8} rx={1.5} fill={arc.color} />
+            <text x={12} y={7} fontSize="7px" fill="#334155" fontWeight="700">{arc.label}</text>
+            <text x={12} y={16} fontSize="6.5px" fill="#0f172a" fontWeight="900">
+              Rp {rp(arc.value)} <tspan fill="#64748b" fontWeight="600">({(arc.pct * 100).toFixed(1)}%)</tspan>
+            </text>
+          </g>
+        );
+      })}
     </svg>
   );
 }
@@ -284,21 +293,32 @@ export default function ReportPrint({ data }: ReportPrintProps) {
 
           {/* ── SUMMARY GRID ── */}
           <div className="wk-pr-summary-grid">
-            {[
-              { label: 'Jumlah Transaksi', value: `${data.txCount} transaksi`, color: theme.primary },
-              { label: 'Pendapatan Kotor', value: `Rp ${rp(data.totalRevenue)}`, color: '#3b82f6' },
-              { label: 'Total Diskon', value: `Rp ${rp(data.totalDiscount)}`, color: '#e11d48' },
-              { label: 'Penjualan Bersih', value: `Rp ${rp(data.netSales)}`, color: '#10b981' },
-              { label: 'HPP / Modal', value: `Rp ${rp(data.totalHpp)}`, color: '#f59e0b' },
-              { label: 'Total Pengeluaran', value: `Rp ${rp(data.totalExpenses ?? 0)}`, color: '#ec4899' },
-              { label: 'Laba Bersih', value: `Rp ${rp(data.netProfit ?? 0)}`, color: '#8b5cf6' },
-              { label: 'Margin Keuntungan', value: `${data.marginPercent.toFixed(1)}%`, color: '#6366f1' },
-            ].map(item => (
-              <div key={item.label} className="wk-pr-summary-card" style={{ borderLeftColor: item.color }}>
-                <p className="wk-pr-summary-label">{item.label}</p>
-                <p className="wk-pr-summary-value">{item.value}</p>
-              </div>
-            ))}
+            {(() => {
+              const summaryItems = [
+                { label: 'Jumlah Transaksi', value: `${data.txCount} transaksi`, color: theme.primary },
+                { label: 'Pendapatan Kotor', value: `Rp ${rp(data.totalRevenue)}`, color: '#3b82f6' },
+                { label: 'Total Diskon', value: `Rp ${rp(data.totalDiscount)}`, color: '#e11d48' },
+              ];
+              if (data.totalTaxAmount !== undefined && data.totalTaxAmount > 0) {
+                summaryItems.push({ label: 'Pajak (PPN)', value: `Rp ${rp(data.totalTaxAmount)}`, color: '#3b82f6' });
+              }
+              if (data.totalAdminFee !== undefined && data.totalAdminFee > 0) {
+                summaryItems.push({ label: 'Biaya Admin', value: `Rp ${rp(data.totalAdminFee)}`, color: '#3b82f6' });
+              }
+              summaryItems.push(
+                { label: 'Penjualan Bersih', value: `Rp ${rp(data.netSales)}`, color: '#10b981' },
+                { label: 'HPP / Modal', value: `Rp ${rp(data.totalHpp)}`, color: '#f59e0b' },
+                { label: 'Total Pengeluaran', value: `Rp ${rp(data.totalExpenses ?? 0)}`, color: '#ec4899' },
+                { label: 'Laba Bersih', value: `Rp ${rp(data.netProfit ?? 0)}`, color: '#8b5cf6' },
+                { label: 'Margin Keuntungan', value: `${data.marginPercent.toFixed(1)}%`, color: '#6366f1' }
+              );
+              return summaryItems.map(item => (
+                <div key={item.label} className="wk-pr-summary-card" style={{ borderLeftColor: item.color }}>
+                  <p className="wk-pr-summary-label">{item.label}</p>
+                  <p className="wk-pr-summary-value">{item.value}</p>
+                </div>
+              ));
+            })()}
           </div>
 
           {/* ── LABA KOTOR & LABA BERSIH (SIDE BY SIDE) ── */}
@@ -311,7 +331,11 @@ export default function ReportPrint({ data }: ReportPrintProps) {
             }}>
               <div>
                 <p className="wk-pr-net-title">Laba Kotor (Gross Profit)</p>
-                <p className="wk-pr-net-sub">Penjualan Bersih − HPP</p>
+                <p className="wk-pr-net-sub">
+                  Penjualan Bersih − HPP
+                  {(data.totalTaxAmount && data.totalTaxAmount > 0) ? ' − PPN' : ''}
+                  {(data.totalAdminFee && data.totalAdminFee > 0) ? ' − Admin' : ''}
+                </p>
               </div>
               <p className="wk-pr-net-value" style={{ color: data.grossProfit >= 0 ? '#059669' : '#dc2626' }}>
                 {data.grossProfit >= 0 ? '+' : '−'} Rp {rp(Math.abs(data.grossProfit))}
@@ -350,6 +374,8 @@ export default function ReportPrint({ data }: ReportPrintProps) {
                   totalHpp={data.totalHpp}
                   grossProfit={data.grossProfit}
                   totalDiscount={data.totalDiscount}
+                  totalTaxAmount={data.totalTaxAmount}
+                  totalAdminFee={data.totalAdminFee}
                   primaryColor={theme.primary}
                 />
               </div>

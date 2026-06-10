@@ -10,7 +10,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { printHtmlContent, universalPrint } from '@/lib/print-helper';
+import { printHtmlContent, universalPrint, printElementNative } from '@/lib/print-helper';
+import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
 
 interface StockReportShareModalProps {
@@ -80,33 +81,40 @@ export default function StockReportShareModal({ isOpen, onClose, onGenerate, sto
       const endStr = endDate.toISOString().split('T')[0];
       const docName = `Laporan_Stok_${startStr}_to_${endStr}`;
       
-      const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>${docName}</title>
-            <style>
-              #mesenae-print-section {
-                position: static !important;
-                width: 100% !important;
-                height: auto !important;
-                overflow: visible !important;
-                opacity: 1 !important;
-                visibility: visible !important;
-                display: block !important;
-                pointer-events: auto !important;
-              }
-            </style>
-          </head>
-          <body>
-            ${printElement.outerHTML}
-          </body>
-        </html>
-      `;
+      const isNative = Capacitor.isNativePlatform();
+      if (isNative) {
+        // Render ke PNG untuk native sharing/printing agar tidak berupa file HTML teks
+        await printElementNative('mesenae-print-section', docName);
+      } else {
+        // Di Web, cetak langsung raw HTML agar page-break dan margins normal
+        const htmlContent = `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>${docName}</title>
+              <style>
+                #mesenae-print-section {
+                  position: static !important;
+                  width: 100% !important;
+                  height: auto !important;
+                  overflow: visible !important;
+                  opacity: 1 !important;
+                  visibility: visible !important;
+                  display: block !important;
+                  pointer-events: auto !important;
+                }
+              </style>
+            </head>
+            <body>
+              ${printElement.outerHTML}
+            </body>
+          </html>
+        `;
 
-      const printed = await printHtmlContent(htmlContent, docName);
-      if (!printed) {
-        await universalPrint(htmlContent, docName);
+        const printed = await printHtmlContent(htmlContent, docName);
+        if (!printed) {
+          await universalPrint(htmlContent, docName);
+        }
       }
     } catch (err: any) {
       console.error('Print report failed:', err);

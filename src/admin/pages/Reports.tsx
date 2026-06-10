@@ -1,7 +1,7 @@
 import { useDbQuery } from '@/hooks/db-hooks';
 import type { Expense } from '@/hooks/db-hooks';
 import { useState, useMemo, useEffect } from 'react';
-import { BarChart3, TrendingUp, ShoppingCart, Package, DollarSign, ArrowDown, ArrowUp, Minus, Share2, Filter } from 'lucide-react';
+import { BarChart3, TrendingUp, ShoppingCart, Package, DollarSign, ArrowDown, ArrowUp, Minus, Plus, Share2, Filter } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -94,13 +94,21 @@ export default function Laporan() {
   const totalProfit = useMemo(() => transactions.reduce((sum, t) => sum + (t.profit || 0), 0), [transactions]);
   const totalRevenue = useMemo(() => transactions.reduce((sum, t) => sum + (t.subtotal || 0), 0), [transactions]);
   const totalDiscount = useMemo(() => transactions.reduce((sum, t) => sum + (t.discountAmount || 0), 0), [transactions]);
+  const totalTaxAmount = useMemo(() => transactions.reduce((sum, t) => sum + (t.taxAmount ?? t.tax_amount ?? 0), 0), [transactions]);
+  const totalAdminFee = useMemo(() => transactions.reduce((sum, t) => {
+    if (t.adminFee !== undefined || t.admin_fee !== undefined) {
+      return sum + (t.adminFee ?? t.admin_fee ?? 0);
+    }
+    return sum + (t.taxAndService ?? t.tax_and_service ?? 0);
+  }, 0), [transactions]);
+
   const netSales = totalSales;
-  const totalHpp = totalSales - totalProfit;
   const grossProfit = totalProfit;
+  const totalHpp = totalRevenue - totalDiscount - grossProfit;
   const marginPercent = useMemo(() => {
-    if (totalSales === 0) return 0;
-    return (totalProfit / totalSales) * 100;
-  }, [totalProfit, totalSales]);
+    if (netSales === 0) return 0;
+    return (grossProfit / netSales) * 100;
+  }, [grossProfit, netSales]);
 
   // Expenses for the same period
   const totalExpenses = useMemo(() => {
@@ -219,7 +227,14 @@ export default function Laporan() {
       const totalDiscount = filteredTx.reduce((sum, t) => sum + (t.discountAmount || 0), 0);
       const netSales = filteredTx.reduce((sum, t) => sum + (t.total || 0), 0);
       const grossProfit = filteredTx.reduce((sum, t) => sum + (t.profit || 0), 0);
-      const totalHpp = netSales - grossProfit;
+      const totalTaxAmount = filteredTx.reduce((sum, t) => sum + (t.taxAmount ?? t.tax_amount ?? 0), 0);
+      const totalAdminFee = filteredTx.reduce((sum, t) => {
+        if (t.adminFee !== undefined || t.admin_fee !== undefined) {
+          return sum + (t.adminFee ?? t.admin_fee ?? 0);
+        }
+        return sum + (t.taxAndService ?? t.tax_and_service ?? 0);
+      }, 0);
+      const totalHpp = totalRevenue - totalDiscount - grossProfit;
       const marginPercent = netSales > 0 ? (grossProfit / netSales) * 100 : 0;
 
       const reportProductMap: Record<string, { name: string, qty: number, revenue: number, profit: number, stock: number }> = {};
@@ -336,6 +351,8 @@ export default function Laporan() {
         txCount,
         totalRevenue,
         totalDiscount,
+        totalTaxAmount,
+        totalAdminFee,
         netSales,
         totalHpp,
         grossProfit,
@@ -464,6 +481,24 @@ export default function Laporan() {
                   <span>Diskon</span>
                 </div>
                 <span className="font-semibold">-{rp(totalDiscount)}</span>
+              </div>
+            )}
+            {totalTaxAmount > 0 && (
+              <div className="flex justify-between items-center text-sm text-blue-600 dark:text-blue-400">
+                <div className="flex items-center gap-2">
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Pajak (PPN)</span>
+                </div>
+                <span className="font-semibold">+{rp(totalTaxAmount)}</span>
+              </div>
+            )}
+            {totalAdminFee > 0 && (
+              <div className="flex justify-between items-center text-sm text-blue-600 dark:text-blue-400">
+                <div className="flex items-center gap-2">
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Biaya Admin</span>
+                </div>
+                <span className="font-semibold">+{rp(totalAdminFee)}</span>
               </div>
             )}
             <div className="flex justify-between items-center text-sm border-t pt-2">

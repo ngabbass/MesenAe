@@ -41,6 +41,8 @@ export interface PaymentModalProps {
     tableNumber: string;
     remarks: string;
     taxAndService: number;
+    taxAmount: number;
+    adminFee: number;
     total: number;
     amountToPay: number; // Added so parent knows exactly how much to charge
     change: number;
@@ -91,14 +93,29 @@ export default function PaymentModal({
     [currentMethod]
   );
 
-  const taxAndService = useMemo(() => {
-    if (!currentMethod || currentMethod.provider === 'manual') return 0;
-    if (currentMethod.category === 'qris')     return Math.round(baseTotal * 0.007);
-    if (currentMethod.category === 'e-wallet') return Math.round(baseTotal * 0.02);
-    if (currentMethod.category === 'transfer') return 4000;
-    if (currentMethod.category === 'lainnya')  return Math.round(baseTotal * 0.03);
+  const ppnAmount = useMemo(() => {
+    if (!storeSettings?.enableTax) return 0;
+    const baseTotalVal = Math.max(0, baseTotal);
+    return Math.round(baseTotalVal * (storeSettings.taxPercentage || 0) / 100);
+  }, [storeSettings, baseTotal]);
+
+  const adminFee = useMemo(() => {
+    const isMidtrans = currentMethod && currentMethod.provider !== 'manual';
+    if (isMidtrans) {
+      const baseTotalVal = Math.max(0, baseTotal);
+      if (currentMethod.category === 'qris')     return Math.round(baseTotalVal * 0.007);
+      if (currentMethod.category === 'e-wallet') return Math.round(baseTotalVal * 0.02);
+      if (currentMethod.category === 'transfer') return 4000;
+      if (currentMethod.category === 'lainnya')  return Math.round(baseTotalVal * 0.03);
+    } else if (storeSettings?.enableAdminFee) {
+      return storeSettings.adminFeeValue || 0;
+    }
     return 0;
-  }, [currentMethod, baseTotal]);
+  }, [currentMethod, baseTotal, storeSettings]);
+
+  const taxAndService = useMemo(() => {
+    return ppnAmount + adminFee;
+  }, [ppnAmount, adminFee]);
 
   const total = useMemo(() => Math.max(0, baseTotal) + taxAndService, [baseTotal, taxAndService]);
   const totalPaidSoFar = useMemo(() => payments.reduce((s, p) => s + p.amount, 0), [payments]);
@@ -197,12 +214,14 @@ export default function PaymentModal({
       tableNumber: tableNumber.trim(),
       remarks: remarks.trim(),
       taxAndService,
+      taxAmount: ppnAmount,
+      adminFee: adminFee,
       total,
       amountToPay: isNonCash ? remainingToPay : total,
       change: finalChange,
       paymentMethodCategory: currentMethod?.category
     });
-  }, [canCheckout, paymentMethodId, payments, isNonCash, total, paymentAmount, currentMethod, customerName, tableNumber, remarks, taxAndService, onCheckout]);
+  }, [canCheckout, paymentMethodId, payments, isNonCash, total, paymentAmount, currentMethod, customerName, tableNumber, remarks, taxAndService, ppnAmount, adminFee, onCheckout]);
 
   // ── Icons & colors ───────────────────────────────────────────
   const ICONS: Record<string, React.ReactNode> = {
@@ -234,10 +253,11 @@ export default function PaymentModal({
             <div className="text-center py-3 bg-primary/5 rounded-xl">
               <p className="text-xs text-muted-foreground mb-0.5">Total Bayar</p>
               <p className="text-3xl font-black text-primary">{rp(total)}</p>
-              {taxAndService > 0 && (
-                <p className="text-[11px] text-blue-600 mt-1 font-medium">
-                  Termasuk biaya layanan Rp {taxAndService.toLocaleString('id-ID')}
-                </p>
+              {(ppnAmount > 0 || adminFee > 0) && (
+                <div className="text-[10px] text-blue-600 mt-1 font-medium space-y-0.5">
+                  {ppnAmount > 0 && <p>Termasuk Pajak (PPN {storeSettings?.taxPercentage || 0}%): {rp(ppnAmount)}</p>}
+                  {adminFee > 0 && <p>Termasuk Biaya Admin: {rp(adminFee)}</p>}
+                </div>
               )}
             </div>
 

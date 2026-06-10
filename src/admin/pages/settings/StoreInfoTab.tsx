@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useDbQuery, dbInsert, dbUpdate, dbUploadFile, dbDeleteFile } from '@/hooks/db-hooks';
 import type { StoreSettings } from '@/hooks/db-hooks';
 import { Section, SettingCard } from '../Settings';
-import { Edit2, Store, ZoomIn, Link as LinkIcon, Save, Loader2, UtensilsCrossed, Package, Smartphone, Camera, X } from 'lucide-react';
+import { Edit2, Store, ZoomIn, Link as LinkIcon, Save, Loader2, UtensilsCrossed, Package, Smartphone, Camera, X, Percent, Coins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +29,11 @@ export default function StoreInfoTab({ hasEditAccess }: { hasEditAccess: boolean
   const [deliveryMode, setDeliveryMode] = useState<'ambil' | 'diantar'>('diantar');
   const [enableWhatsappNotification, setEnableWhatsappNotification] = useState<boolean>(false);
   const [enableKitchen, setEnableKitchen] = useState<boolean>(true);
+  const [enableTax, setEnableTax] = useState<boolean>(false);
+  const [taxPercentage, setTaxPercentage] = useState<number>(0);
+  const [enableAdminFee, setEnableAdminFee] = useState<boolean>(false);
+  const [adminFeeValue, setAdminFeeValue] = useState<number>(0);
+  const [enableSplitBill, setEnableSplitBill] = useState<boolean>(true);
   const [isSavingStore, setIsSavingStore] = useState(false);
   const [cropFile, setCropFile] = useState<File | null>(null);
 
@@ -41,6 +46,11 @@ export default function StoreInfoTab({ hasEditAccess }: { hasEditAccess: boolean
       setDeliveryMode(storeSettings.deliveryMode || 'diantar');
       setEnableWhatsappNotification(storeSettings.enableWhatsappNotification || false);
       setEnableKitchen(storeSettings.enableKitchen !== false);
+      setEnableTax(storeSettings.enableTax || false);
+      setTaxPercentage(storeSettings.taxPercentage || 0);
+      setEnableAdminFee(storeSettings.enableAdminFee || false);
+      setAdminFeeValue(storeSettings.adminFeeValue || 0);
+      setEnableSplitBill(storeSettings.enableSplitBill !== false);
     }
   }, [storeSettings]);
 
@@ -91,6 +101,84 @@ export default function StoreInfoTab({ hasEditAccess }: { hasEditAccess: boolean
     }
   };
 
+  const saveTaxToggle = async (checked: boolean) => {
+    if (!hasEditAccess) {
+      toast.error('Akses ditolak.');
+      return;
+    }
+    setEnableTax(checked);
+    try {
+      if (storeSettings?.id) {
+        await dbUpdate('storeSettings', storeSettings.id, { enableTax: checked });
+        toast.success(checked ? 'Pajak (PPN) diaktifkan' : 'Pajak (PPN) dinonaktifkan');
+      }
+    } catch (e: any) {
+      toast.error('Gagal memperbarui pengaturan pajak: ' + e.message);
+    }
+  };
+
+  const saveTaxPercentage = async () => {
+    if (!hasEditAccess) {
+      toast.error('Akses ditolak.');
+      return;
+    }
+    try {
+      if (storeSettings?.id) {
+        await dbUpdate('storeSettings', storeSettings.id, { taxPercentage });
+        toast.success('Persentase pajak berhasil disimpan');
+      }
+    } catch (e: any) {
+      toast.error('Gagal menyimpan persentase pajak: ' + e.message);
+    }
+  };
+
+  const saveAdminFeeToggle = async (checked: boolean) => {
+    if (!hasEditAccess) {
+      toast.error('Akses ditolak.');
+      return;
+    }
+    setEnableAdminFee(checked);
+    try {
+      if (storeSettings?.id) {
+        await dbUpdate('storeSettings', storeSettings.id, { enableAdminFee: checked });
+        toast.success(checked ? 'Biaya admin diaktifkan' : 'Biaya admin dinonaktifkan');
+      }
+    } catch (e: any) {
+      toast.error('Gagal memperbarui pengaturan biaya admin: ' + e.message);
+    }
+  };
+
+  const saveAdminFeeValue = async () => {
+    if (!hasEditAccess) {
+      toast.error('Akses ditolak.');
+      return;
+    }
+    try {
+      if (storeSettings?.id) {
+        await dbUpdate('storeSettings', storeSettings.id, { adminFeeValue });
+        toast.success('Nominal biaya admin berhasil disimpan');
+      }
+    } catch (e: any) {
+      toast.error('Gagal menyimpan biaya admin: ' + e.message);
+    }
+  };
+
+  const saveSplitBillToggle = async (checked: boolean) => {
+    if (!hasEditAccess) {
+      toast.error('Akses ditolak.');
+      return;
+    }
+    setEnableSplitBill(checked);
+    try {
+      if (storeSettings?.id) {
+        await dbUpdate('storeSettings', storeSettings.id, { enableSplitBill: checked });
+        toast.success(checked ? 'Fitur Split Bill diaktifkan' : 'Fitur Split Bill dinonaktifkan');
+      }
+    } catch (e: any) {
+      toast.error('Gagal memperbarui pengaturan split bill: ' + e.message);
+    }
+  };
+
   const saveCustomerUrl = async () => {
     if (!hasEditAccess) {
       toast.error('Akses ditolak.');
@@ -123,6 +211,11 @@ export default function StoreInfoTab({ hasEditAccess }: { hasEditAccess: boolean
     setReceiptFooter(storeSettings?.receiptFooter ?? 'Terima kasih atas kunjungan Anda!');
     setDeliveryMode(storeSettings?.deliveryMode ?? 'diantar');
     setEnableWhatsappNotification(storeSettings?.enableWhatsappNotification ?? false);
+    setEnableTax(storeSettings?.enableTax ?? false);
+    setTaxPercentage(storeSettings?.taxPercentage ?? 0);
+    setEnableAdminFee(storeSettings?.enableAdminFee ?? false);
+    setAdminFeeValue(storeSettings?.adminFeeValue ?? 0);
+    setEnableSplitBill(storeSettings?.enableSplitBill !== false);
     setStoreDialog(true);
   };
 
@@ -156,7 +249,12 @@ export default function StoreInfoTab({ hasEditAccess }: { hasEditAccess: boolean
         receiptFooter: receiptFooter.trim(), tables: storeSettings?.tables ?? [],
         deliveryMode,
         enableWhatsappNotification,
-        enableKitchen
+        enableKitchen,
+        enableTax,
+        taxPercentage,
+        enableAdminFee,
+        adminFeeValue,
+        enableSplitBill
       };
       
       if (storeSettings?.id) {
@@ -328,6 +426,85 @@ export default function StoreInfoTab({ hasEditAccess }: { hasEditAccess: boolean
                   onCheckedChange={(checked) => saveWhatsappNotificationToggle(checked)}
                 />
               </div>
+            </SettingCard>
+          </div>
+
+          <div className="mt-6">
+            <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide flex items-center gap-1.5"><Coins className="w-3.5 h-3.5" /> Pembagian Tagihan (Split Bill)</p>
+            <SettingCard>
+              <div className="p-4 flex items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold">Aktifkan Fitur Split Bill</p>
+                  <p className="text-xs text-muted-foreground leading-snug">Menampilkan opsi pembagian tagihan (Split Bill) untuk pembeli di halaman checkout.</p>
+                </div>
+                <Switch
+                  disabled={!hasEditAccess}
+                  checked={enableSplitBill}
+                  onCheckedChange={(checked) => saveSplitBillToggle(checked)}
+                />
+              </div>
+            </SettingCard>
+          </div>
+
+          <div className="mt-6">
+            <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide flex items-center gap-1.5"><Percent className="w-3.5 h-3.5" /> Pajak &amp; Biaya Layanan</p>
+            <SettingCard>
+              {/* Pajak (PPN) */}
+              <div className="p-4 flex items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold">Aktifkan Pajak (PPN)</p>
+                  <p className="text-xs text-muted-foreground leading-snug">Menambahkan pajak PPN sebesar persentase tertentu ke total pesanan.</p>
+                </div>
+                <Switch
+                  disabled={!hasEditAccess}
+                  checked={enableTax}
+                  onCheckedChange={(checked) => saveTaxToggle(checked)}
+                />
+              </div>
+              {enableTax && (
+                <div className="p-4 border-t border-border flex items-end gap-3 bg-muted/20">
+                  <div className="flex-1 max-w-[200px] space-y-1.5">
+                    <Label className="text-xs font-medium">Persentase Pajak (%)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={taxPercentage || ''}
+                      onChange={e => setTaxPercentage(Number(e.target.value))}
+                      className="bg-background h-9"
+                    />
+                  </div>
+                  <Button onClick={saveTaxPercentage} className="h-9 px-3 shrink-0 shadow-sm">Simpan %</Button>
+                </div>
+              )}
+
+              {/* Biaya Admin */}
+              <div className="p-4 border-t border-border flex items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold">Aktifkan Biaya Admin</p>
+                  <p className="text-xs text-muted-foreground leading-snug">Menambahkan biaya admin flat ke total pesanan (manual atau online).</p>
+                </div>
+                <Switch
+                  disabled={!hasEditAccess}
+                  checked={enableAdminFee}
+                  onCheckedChange={(checked) => saveAdminFeeToggle(checked)}
+                />
+              </div>
+              {enableAdminFee && (
+                <div className="p-4 border-t border-border flex items-end gap-3 bg-muted/20">
+                  <div className="flex-1 max-w-[200px] space-y-1.5">
+                    <Label className="text-xs font-medium">Nominal Biaya Admin (Rp)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={adminFeeValue || ''}
+                      onChange={e => setAdminFeeValue(Number(e.target.value))}
+                      className="bg-background h-9"
+                    />
+                  </div>
+                  <Button onClick={saveAdminFeeValue} className="h-9 px-3 shrink-0 shadow-sm">Simpan Rp</Button>
+                </div>
+              )}
             </SettingCard>
           </div>
         </Section>

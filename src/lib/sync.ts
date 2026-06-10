@@ -95,6 +95,8 @@ export function mapTransaction(r: Record<string, unknown>) {
     discountAmount: Number(r.discount_amount),
     total: Number(r.total),
     taxAndService: r.tax_and_service ? Number(r.tax_and_service) : undefined,
+    taxAmount: r.tax_amount ? Number(r.tax_amount) : undefined,
+    adminFee: r.admin_fee ? Number(r.admin_fee) : undefined,
     paymentMethodId: r.payment_method_id as number,
     paymentAmount: Number(r.payment_amount),
     payments: (r.payments ?? []) as unknown[],
@@ -145,7 +147,12 @@ export function mapStoreSettings(s: Record<string, unknown>) {
     tables: s.tables as string[],
     promoBanners: (s.promo_banners as any[]) ?? [],
     deliveryMode: (s.delivery_mode as 'ambil' | 'diantar') || 'diantar',
-    enableWhatsappNotification: s.enable_whatsapp_notification === undefined ? false : (s.enable_whatsapp_notification as boolean)
+    enableWhatsappNotification: s.enable_whatsapp_notification === undefined ? false : (s.enable_whatsapp_notification as boolean),
+    enableTax: s.enable_tax === undefined ? false : (s.enable_tax as boolean),
+    taxPercentage: s.tax_percentage ? Number(s.tax_percentage) : 0,
+    enableAdminFee: s.enable_admin_fee === undefined ? false : (s.enable_admin_fee as boolean),
+    adminFeeValue: s.admin_fee_value ? Number(s.admin_fee_value) : 0,
+    enableSplitBill: s.enable_split_bill === undefined ? true : (s.enable_split_bill as boolean)
   };
 }
 
@@ -231,6 +238,9 @@ export function toDatabaseTransaction(d: Record<string, unknown>) {
     table_number: d.tableNumber ?? null, remarks: d.remarks ?? null,
     needs_kitchen: d.needsKitchen ?? null,
     opened_at: d.openedAt ?? null, closed_at: d.closedAt ?? null,
+    tax_and_service: d.taxAndService ?? null,
+    tax_amount: d.taxAmount ?? null,
+    admin_fee: d.adminFee ?? null,
   };
 }
 
@@ -255,7 +265,12 @@ export function toDatabaseStoreSettings(d: Record<string, unknown>) {
     logo: d.logo,
     tables: d.tables,
     delivery_mode: d.deliveryMode,
-    enable_whatsapp_notification: d.enableWhatsappNotification ?? false
+    enable_whatsapp_notification: d.enableWhatsappNotification ?? false,
+    enable_tax: d.enableTax ?? false,
+    tax_percentage: d.taxPercentage ?? 0,
+    enable_admin_fee: d.enableAdminFee ?? false,
+    admin_fee_value: d.adminFeeValue ?? 0,
+    enable_split_bill: d.enableSplitBill ?? true
   };
 }
 

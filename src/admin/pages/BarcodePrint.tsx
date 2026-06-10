@@ -78,18 +78,49 @@ export default function BarcodePrint() {
     setPrinting(true);
     try {
       const isNative = Capacitor.isNativePlatform();
+      const isA4 = paperSize === 'a4';
+
       if (isNative) {
         // Jika Thermal ATAU A4 tapi hanya 1 halaman, aman pakai gambar.
         // Lebih dari itu dilewati untuk mencegah Out-of-Memory (OOM) WebView crash.
         if (paperSize === 'thermal' || chunkedA4Items.length <= 1) {
           try {
             toast.info('Menyiapkan halaman cetak native...');
-            const dataUrl = await toPng(printEl, {
-              cacheBust: true,
-              fontEmbedCSS: '',
-              pixelRatio: 1.5,
-              backgroundColor: '#ffffff'
+            
+            // Simpan styles & class asli untuk di-restore
+            const elementsToClean = Array.from(printEl.querySelectorAll('.a4-page, .thermal-page, .scaling-wrapper, .scaling-wrapper-thermal'));
+            const originalStyles = elementsToClean.map(el => el.getAttribute('style') || '');
+            
+            // Bersihkan style dan classes pembungkus sementara agar toPng merasterisasi layout 100% asli
+            elementsToClean.forEach(el => el.removeAttribute('style'));
+            elementsToClean.forEach(el => {
+              el.classList.remove('shadow-xl', 'border', 'border-gray-300', 'a4-page-scaled');
             });
+
+            let dataUrl = '';
+            try {
+              dataUrl = await toPng(printEl, {
+                cacheBust: true,
+                fontEmbedCSS: '',
+                pixelRatio: 1.5,
+                backgroundColor: '#ffffff'
+              });
+            } finally {
+              // Restore styles asli
+              elementsToClean.forEach((el, idx) => {
+                if (originalStyles[idx]) el.setAttribute('style', originalStyles[idx]);
+                else el.removeAttribute('style');
+              });
+              // Restore classes asli
+              elementsToClean.forEach(el => {
+                if (el.classList.contains('a4-page')) {
+                  el.classList.add('shadow-xl', 'border', 'border-gray-300', 'a4-page-scaled');
+                } else if (el.classList.contains('thermal-page')) {
+                  el.classList.add('shadow-xl', 'border', 'border-gray-300');
+                }
+              });
+            }
+
             const fullHtml = `
               <html>
                 <head>
@@ -118,43 +149,82 @@ export default function BarcodePrint() {
 
       toast.info('Menyiapkan halaman cetak...');
 
-      // Copy parent document's styles
-      let stylesHtml = '';
-      document.querySelectorAll('style, link[rel="stylesheet"]').forEach((el) => {
-        stylesHtml += el.outerHTML;
-      });
+      // Buat HTML bersih tanpa container scaling, shadow, border abu-abu agar mepet pas di kertas A4
+      const pages = Array.from(printEl.querySelectorAll(isA4 ? '.a4-page' : '.thermal-page'));
+      const pagesHtml = pages.map(page => {
+        const pageClone = page.cloneNode(true) as HTMLDivElement;
+        pageClone.removeAttribute('style');
+        pageClone.classList.remove('shadow-xl', 'border', 'border-gray-300', 'a4-page-scaled');
+        return pageClone.outerHTML;
+      }).join('\n');
 
       const fullHtml = `
         <html>
           <head>
             <title>Cetak_${printMode === 'barcode' ? 'Barcode' : 'Label'}</title>
-            ${stylesHtml}
             <style>
-              @page { margin: 0; size: ${paperSize === 'a4' ? 'A4' : 'auto'}; }
-              body { -webkit-print-color-adjust: exact; background: white !important; margin: 0; padding: 0; }
-              .print-container {
-                background: transparent !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                box-shadow: none !important;
-                border: none !important;
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: center !important;
-                width: ${paperSize === 'a4' ? '100%' : '58mm'} !important;
+              @page { 
+                margin: 0; 
+                size: ${isA4 ? 'A4 portrait' : '58mm auto'}; 
               }
-              .a4-page {
+              html, body {
                 margin: 0 !important;
-                border: none !important;
-                box-shadow: none !important;
+                padding: 0 !important;
+                background: white !important;
+                width: 100% !important;
+              }
+              body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .print-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: 100%;
+              }
+              
+              /* A4 Page Styling */
+              .a4-page {
+                width: 210mm !important;
+                height: 297mm !important;
+                min-width: 210mm !important;
+                min-height: 297mm !important;
+                max-width: 210mm !important;
+                max-height: 297mm !important;
+                padding: 10mm !important;
+                box-sizing: border-box !important;
+                background: white !important;
+                display: grid !important;
+                grid-template-columns: repeat(4, 1fr) !important;
+                grid-template-rows: repeat(10, 1fr) !important;
+                gap: 3mm 4mm !important;
+                content-start: start !important;
+                overflow: hidden !important;
                 page-break-after: always !important;
                 break-after: page !important;
+              }
+              
+              /* Thermal Page Styling */
+              .thermal-page {
+                width: 58mm !important;
+                padding: 2mm !important;
+                box-sizing: border-box !important;
+                background: white !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 2mm !important;
+              }
+
+              /* General items */
+              .a4-page *, .thermal-page * {
+                box-sizing: border-box !important;
               }
             </style>
           </head>
           <body>
             <div class="print-container">
-              ${printEl.innerHTML}
+              ${pagesHtml}
             </div>
           </body>
         </html>

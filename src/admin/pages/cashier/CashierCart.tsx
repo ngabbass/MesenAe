@@ -34,6 +34,8 @@ const CashierCart: React.FC = React.memo(() => {
     setTempDiscountValue,
     setDiscountDialogOpen,
     subtotal,
+    ppnAmount,
+    adminFee,
     total,
     hasEditAccess,
     saveOpenBill,
@@ -232,6 +234,18 @@ const CashierCart: React.FC = React.memo(() => {
                 <div className="flex justify-between text-sm text-destructive">
                   <span>Diskon</span>
                   <span>-{rp(txDiscountAmount)}</span>
+                </div>
+              )}
+              {ppnAmount > 0 && (
+                <div className="flex justify-between text-sm text-blue-600">
+                  <span>Pajak (PPN {storeSettings?.taxPercentage || 0}%)</span>
+                  <span>{rp(ppnAmount)}</span>
+                </div>
+              )}
+              {adminFee > 0 && (
+                <div className="flex justify-between text-sm text-blue-600">
+                  <span>Biaya Admin</span>
+                  <span>{rp(adminFee)}</span>
                 </div>
               )}
               <div className="flex justify-between items-center font-bold text-lg border-t border-slate-100 dark:border-slate-800 pt-3">
@@ -482,6 +496,18 @@ const CashierCart: React.FC = React.memo(() => {
                   <div className="flex justify-between text-sm text-destructive">
                     <span>Diskon</span>
                     <span>-{rp(txDiscountAmount)}</span>
+                  </div>
+                )}
+                {ppnAmount > 0 && (
+                  <div className="flex justify-between text-sm text-blue-600">
+                    <span>Pajak (PPN {storeSettings?.taxPercentage || 0}%)</span>
+                    <span>{rp(ppnAmount)}</span>
+                  </div>
+                )}
+                {adminFee > 0 && (
+                  <div className="flex justify-between text-sm text-blue-600">
+                    <span>Biaya Admin</span>
+                    <span>{rp(adminFee)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-lg font-bold">

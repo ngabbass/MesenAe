@@ -466,6 +466,31 @@ export default function ReceiptSettings({ storeSettings, hasEditAccess }: Receip
 
   const rp = (n: number) => n.toLocaleString('id-ID');
 
+  // Preview totals calculations
+  const subtotalMinimarket = 47000;
+  const taxMinimarket = storeSettings?.enableTax ? Math.round(subtotalMinimarket * (storeSettings.taxPercentage || 0) / 100) : 0;
+  const adminMinimarket = storeSettings?.enableAdminFee ? (storeSettings.adminFeeValue || 0) : 0;
+  const totalMinimarket = subtotalMinimarket + taxMinimarket + adminMinimarket;
+  const cashMinimarket = totalMinimarket + 3000;
+  const changeMinimarket = 3000;
+
+  const subtotalFnB = 35000;
+  const taxFnB = storeSettings?.enableTax ? Math.round(subtotalFnB * (storeSettings.taxPercentage || 0) / 100) : 0;
+  const adminFnB = storeSettings?.enableAdminFee ? (storeSettings.adminFeeValue || 0) : 0;
+  const totalFnB = subtotalFnB + taxFnB + adminFnB;
+
+  const subtotalClassic = 26000;
+  const taxClassic = storeSettings?.enableTax ? Math.round(subtotalClassic * (storeSettings.taxPercentage || 0) / 100) : 0;
+  const adminClassic = storeSettings?.enableAdminFee ? (storeSettings.adminFeeValue || 0) : 0;
+  const totalClassic = subtotalClassic + taxClassic + adminClassic;
+  const cashClassic = totalClassic + 4000;
+  const changeClassic = 4000;
+
+  const subtotalMinimalis = 39000;
+  const taxMinimalis = storeSettings?.enableTax ? Math.round(subtotalMinimalis * (storeSettings.taxPercentage || 0) / 100) : 0;
+  const adminMinimalis = storeSettings?.enableAdminFee ? (storeSettings.adminFeeValue || 0) : 0;
+  const totalMinimalis = subtotalMinimalis + taxMinimalis + adminMinimalis;
+
   const getFooterStyle = (block: string) => {
     const isLine1 = block === 'line1';
     const bold = isLine1 ? line1Bold : line2Bold;
@@ -936,17 +961,27 @@ export default function ReceiptSettings({ storeSettings, hasEditAccess }: Receip
               <div className="border-t border-dashed border-black my-2" />
               <div className="space-y-0.5 uppercase text-[0.85em]">
                 <div className="flex justify-end gap-4">
-                  <span>HARGA JUAL :</span><span className="w-20 text-right">{rp(47000)}</span>
+                  <span>HARGA JUAL :</span><span className="w-20 text-right">{rp(subtotalMinimarket)}</span>
                 </div>
+                {taxMinimarket > 0 && (
+                  <div className="flex justify-end gap-4">
+                    <span>PPN ({storeSettings?.taxPercentage || 0}%) :</span><span className="w-20 text-right">{rp(taxMinimarket)}</span>
+                  </div>
+                )}
+                {adminMinimarket > 0 && (
+                  <div className="flex justify-end gap-4">
+                    <span>BIAYA ADMIN :</span><span className="w-20 text-right">{rp(adminMinimarket)}</span>
+                  </div>
+                )}
                 <div className="border-t border-dashed border-black my-1" />
                 <div className="flex justify-end gap-4 font-extrabold text-[1.05em]">
-                  <span>TOTAL :</span><span className="w-20 text-right">{rp(47000)}</span>
+                  <span>TOTAL :</span><span className="w-20 text-right">{rp(totalMinimarket)}</span>
                 </div>
                 <div className="flex justify-end gap-4">
-                  <span>TUNAI :</span><span className="w-20 text-right">{rp(50000)}</span>
+                  <span>TUNAI :</span><span className="w-20 text-right">{rp(cashMinimarket)}</span>
                 </div>
                 <div className="flex justify-end gap-4">
-                  <span>KEMBALI :</span><span className="w-20 text-right">{rp(3000)}</span>
+                  <span>KEMBALI :</span><span className="w-20 text-right">{rp(changeMinimarket)}</span>
                 </div>
               </div>
             </div>
@@ -987,9 +1022,19 @@ export default function ReceiptSettings({ storeSettings, hasEditAccess }: Receip
                 ))}
               </div>
               <div className="border-t border-dashed border-black my-2" />
-              <div className="grid grid-cols-[75px_auto] gap-x-1 ml-auto max-w-[200px] text-[0.85em] font-medium">
-                <span>Subtotal</span><span>: {rp(35000)}</span>
-                <span className="font-extrabold text-[1.05em]">Total</span><span className="font-extrabold text-[1.05em]">: {rp(35000)}</span>
+              <div className="grid grid-cols-[100px_auto] gap-x-1 ml-auto max-w-[220px] text-[0.85em] font-medium">
+                <span>Subtotal</span><span>: {rp(subtotalFnB)}</span>
+                {taxFnB > 0 && (
+                  <>
+                    <span>Pajak (PPN {storeSettings?.taxPercentage || 0}%)</span><span>: {rp(taxFnB)}</span>
+                  </>
+                )}
+                {adminFnB > 0 && (
+                  <>
+                    <span>Biaya Admin</span><span>: {rp(adminFnB)}</span>
+                  </>
+                )}
+                <span className="font-extrabold text-[1.05em]">Total</span><span className="font-extrabold text-[1.05em]">: {rp(totalFnB)}</span>
                 <span>Bayar</span><span>: QRIS</span>
               </div>
             </div>
@@ -1030,10 +1075,16 @@ export default function ReceiptSettings({ storeSettings, hasEditAccess }: Receip
               </div>
               <div className="border-t border-dashed border-black/60 my-2" />
               <div className="space-y-1 text-[0.85em] font-medium">
-                <div className="flex justify-between"><span className="text-gray-600">Subtotal</span><span>{rp(26000)}</span></div>
-                <div className="flex justify-between font-black text-[1.05em] border-t border-gray-300 pt-1.5 mt-1.5"><span>Total</span><span>{rp(26000)}</span></div>
-                <div className="flex justify-between mt-1"><span className="text-gray-600">Bayar</span><span>{rp(30000)}</span></div>
-                <div className="flex justify-between"><span className="text-gray-600">Kembali</span><span>{rp(4000)}</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">Subtotal</span><span>{rp(subtotalClassic)}</span></div>
+                {taxClassic > 0 && (
+                  <div className="flex justify-between"><span className="text-gray-600">Pajak (PPN {storeSettings?.taxPercentage || 0}%)</span><span>{rp(taxClassic)}</span></div>
+                )}
+                {adminClassic > 0 && (
+                  <div className="flex justify-between"><span className="text-gray-600">Biaya Admin</span><span>{rp(adminClassic)}</span></div>
+                )}
+                <div className="flex justify-between font-black text-[1.05em] border-t border-gray-300 pt-1.5 mt-1.5"><span>Total</span><span>{rp(totalClassic)}</span></div>
+                <div className="flex justify-between mt-1"><span className="text-gray-600">Bayar</span><span>{rp(cashClassic)}</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">Kembali</span><span>{rp(changeClassic)}</span></div>
               </div>
             </div>
           )}
@@ -1068,8 +1119,23 @@ export default function ReceiptSettings({ storeSettings, hasEditAccess }: Receip
                 ))}
               </div>
               <div className="border-t border-solid border-black/20 my-3" />
-              <div className="flex justify-between font-bold text-[1.05em] text-[0.85em] font-medium">
-                <span>Total</span><span>{rp(39000)}</span>
+              {(taxMinimalis > 0 || adminMinimalis > 0) && (
+                <div className="flex justify-between text-[0.85em] font-medium opacity-80">
+                  <span>Subtotal</span><span>{rp(subtotalMinimalis)}</span>
+                </div>
+              )}
+              {taxMinimalis > 0 && (
+                <div className="flex justify-between text-[0.85em] font-medium opacity-80">
+                  <span>Pajak (PPN {storeSettings?.taxPercentage || 0}%)</span><span>{rp(taxMinimalis)}</span>
+                </div>
+              )}
+              {adminMinimalis > 0 && (
+                <div className="flex justify-between text-[0.85em] font-medium opacity-80">
+                  <span>Biaya Admin</span><span>{rp(adminMinimalis)}</span>
+                </div>
+              )}
+              <div className="flex justify-between font-bold text-[1.05em] text-[0.85em] font-medium mt-1">
+                <span>Total</span><span>{rp(totalMinimalis)}</span>
               </div>
               <div className="flex justify-between text-[0.85em] opacity-80 mt-1 font-medium">
                 <span>Pembayaran</span><span>QRIS</span>

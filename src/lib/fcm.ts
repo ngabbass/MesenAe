@@ -16,6 +16,7 @@ import { LocalNotifications } from "@capacitor/local-notifications";
 import { Haptics } from "@capacitor/haptics";
 import { toast } from "sonner";
 import { getApiUrl } from "./api-helper";
+import { getActiveThemeColorHex } from "@/hooks/use-theme-color";
 
 const VAPID_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY as string;
 
@@ -187,14 +188,15 @@ export const requestForToken = async (
 
 // ─── SEND PUSH NOTIFICATION TO ALL DEVICES OF A ROLE ─────────────────────────
 export const sendPushToRole = async (
-  role: string,
+  role: string | string[],
   payload: { title: string; body: string; url?: string }
 ): Promise<void> => {
   try {
     // Ambil semua FCM token untuk role tersebut dari Firestore
+    const roles = Array.isArray(role) ? role : [role];
     const allTokens = await dbSelect("fcmTokens");
     const tokens: string[] = allTokens
-      .filter((t: any) => t.role === role && t.token)
+      .filter((t: any) => roles.includes(t.role) && t.token)
       .map((t: any) => t.token as string);
 
     if (tokens.length === 0) {
@@ -335,7 +337,7 @@ export const initPushListeners = async (): Promise<void> => {
     });
 
     // 3. Foreground Push Received Listener
-    await PushNotifications.addListener('pushNotificationReceived', (notification) => {
+    await PushNotifications.addListener('pushNotificationReceived', async (notification) => {
       console.log('[FCM] Foreground push received:', notification);
       
       const receiptNumber = notification.data?.receiptNumber || notification.data?.orderId || 
@@ -352,21 +354,18 @@ export const initPushListeners = async (): Promise<void> => {
       
       // Play notification sound based on notification content
       try {
-        const title = (notification.title || "").toLowerCase();
-        const body = (notification.body || "").toLowerCase();
+        const title = (notification.title || "");
+        const body = (notification.body || "");
+        const titleLower = title.toLowerCase();
+        const bodyLower = body.toLowerCase();
         
         // Cek jika push bertema pembaruan status / konfirmasi pembayaran
         const isStatusUpdate = 
-          title.includes("siap") || title.includes("selesai") || title.includes("konfirmasi") || title.includes("lunas") || title.includes("perubahan") ||
-          body.includes("siap") || body.includes("selesai") || body.includes("konfirmasi") || body.includes("lunas") || body.includes("perubahan");
+          titleLower.includes("siap") || titleLower.includes("selesai") || titleLower.includes("konfirmasi") || titleLower.includes("lunas") || titleLower.includes("perubahan") ||
+          bodyLower.includes("siap") || bodyLower.includes("selesai") || bodyLower.includes("konfirmasi") || bodyLower.includes("lunas") || bodyLower.includes("perubahan");
         
-        if (!isStatusUpdate) {
-          console.log('[FCM] New order push received in foreground, letting useRealtimeOrders handle the sound and toast.');
-          return;
-        }
-
-        const soundPath = '/beep.mp3';
-        const audio = new Audio(soundPath);
+        const soundFile = isStatusUpdate ? 'beep.mp3' : 'ding.mp3';
+        const audio = new Audio('/' + soundFile);
         audio.play().catch(e => console.warn("[FCM] Foreground audio play blocked/failed:", e));
         
         // Trigger device vibration
@@ -375,14 +374,52 @@ export const initPushListeners = async (): Promise<void> => {
         // Dismiss any existing toast first to prevent stacking
         toast.dismiss();
 
-        // Display dynamic premium toast for status updates
-        toast.success(
-          `${notification.title || "Pembaruan Pesanan"}: ${notification.body || "Ada pembaruan status!"}`,
-          {
-            duration: 6000,
+        // Display dynamic premium toast
+        if (isStatusUpdate) {
+          toast.success(
+            `${title || "Pembaruan Pesanan"}: ${body || "Ada pembaruan status!"}`,
+            {
+              duration: 6000,
+              position: 'bottom-right'
+            }
+          );
+        } else {
+          toast.success(title || `Pesanan Baru Masuk 🚀`, {
+            description: body || `Ada pesanan baru masuk!`,
+            duration: 8000,
             position: 'bottom-right'
-          }
-        );
+          });
+        }
+
+        // Schedule local notification immediately in the status bar
+        const numericId = parseInt(receiptNumber.toString().replace(/\D/g, ''), 10);
+        const notificationId = isNaN(numericId) ? Math.floor(Date.now() / 1000) : (numericId % 2147483647);
+        
+        try {
+          const activeThemeColor = await getActiveThemeColorHex();
+          const notificationUrl = notification.data?.url || '/admin/pesanan-aktif';
+          
+          await LocalNotifications.schedule({
+            notifications: [
+              {
+                title: title || 'Notifikasi Baru',
+                body: body || 'Ada pembaruan pesanan.',
+                id: notificationId,
+                schedule: { at: new Date(Date.now() + 100) },
+                sound: soundFile,
+                smallIcon: 'ic_notification',
+                iconColor: activeThemeColor,
+                channelId: 'mesenae_orders',
+                extra: {
+                  url: notificationUrl
+                }
+              }
+            ]
+          });
+          console.log(`[FCM] Local notification scheduled in foreground for receipt #${receiptNumber}`);
+        } catch (localErr) {
+          console.warn('[FCM] Failed to trigger Local Notification in foreground:', localErr);
+        }
       } catch (soundErr) {
         console.error("[FCM] Sound player error:", soundErr);
       }

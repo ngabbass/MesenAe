@@ -439,9 +439,23 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
               files: [file],
             });
           } else {
+            const txTaxAmountVal = transaction.taxAmount ?? (transaction as any).tax_amount;
+            const txAdminFeeVal = transaction.adminFee ?? (transaction as any).admin_fee;
+            const txTaxAndServiceVal = transaction.taxAndService ?? transaction.tax_and_service;
+            
+            let taxDetails = '';
+            if (txTaxAmountVal !== undefined || txAdminFeeVal !== undefined) {
+              if (txTaxAmountVal > 0) taxDetails += `Pajak (PPN): ${rp(txTaxAmountVal)}\n`;
+              if (txAdminFeeVal > 0) taxDetails += `Biaya Admin: ${rp(txAdminFeeVal)}\n`;
+            } else if (txTaxAndServiceVal > 0) {
+              taxDetails += `Biaya Admin: ${rp(txTaxAndServiceVal)}\n`;
+            }
+
             const text = encodeURIComponent(
               `*${storeSettings?.storeName || 'Toko'}*\n` +
               `No. Struk: ${transaction.receiptNumber}\n` +
+              `Subtotal: ${rp(transaction.subtotal)}\n` +
+              taxDetails +
               `Total: ${rp(transaction.total)}\n` +
               `Tanggal: ${format(new Date(transaction.date), 'dd MMM yyyy HH:mm', { locale: id })}`
             );
@@ -546,8 +560,16 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
 
       lines.push('--------------------------------\n');
       lines.push(`Subtotal:  ${rp(transaction.subtotal)}\n`);
-      const txTaxAmount = transaction.tax_and_service || transaction.taxAndService || 0;
-      if (txTaxAmount > 0) lines.push(`Biaya Admin: ${rp(txTaxAmount)}\n`);
+      const txTaxAmountVal = transaction.taxAmount ?? (transaction as any).tax_amount;
+      const txAdminFeeVal = transaction.adminFee ?? (transaction as any).admin_fee;
+      const txTaxAndServiceVal = transaction.taxAndService ?? transaction.tax_and_service;
+
+      if (txTaxAmountVal !== undefined || txAdminFeeVal !== undefined) {
+        if (txTaxAmountVal > 0) lines.push(`Pajak (PPN): ${rp(txTaxAmountVal)}\n`);
+        if (txAdminFeeVal > 0) lines.push(`Biaya Admin: ${rp(txAdminFeeVal)}\n`);
+      } else if (txTaxAndServiceVal > 0) {
+        lines.push(`Biaya Admin: ${rp(txTaxAndServiceVal)}\n`);
+      }
       if (txDiscountAmount > 0) lines.push(`Diskon:   -${rp(txDiscountAmount)}\n`);
       
       lines.push('\x1B\x45\x01'); 
@@ -772,10 +794,25 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
                       <span>DISKON :</span><span>-{rp(txDiscountAmount)}</span>
                     </div>
                   )}
-                  {((transaction.tax_and_service || transaction.taxAndService) > 0) && (
-                    <div className="flex justify-between w-full">
-                      <span>BIAYA ADMIN :</span><span>{rp(transaction.tax_and_service || transaction.taxAndService)}</span>
-                    </div>
+                  {((transaction.taxAmount !== undefined || (transaction as any).tax_amount !== undefined) || (transaction.adminFee !== undefined || (transaction as any).admin_fee !== undefined)) ? (
+                    <>
+                      {((transaction.taxAmount ?? (transaction as any).tax_amount) > 0) && (
+                        <div className="flex justify-between w-full">
+                          <span>PAJAK (PPN) :</span><span>{rp(transaction.taxAmount ?? (transaction as any).tax_amount)}</span>
+                        </div>
+                      )}
+                      {((transaction.adminFee ?? (transaction as any).admin_fee) > 0) && (
+                        <div className="flex justify-between w-full">
+                          <span>BIAYA ADMIN :</span><span>{rp(transaction.adminFee ?? (transaction as any).admin_fee)}</span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    ((transaction.tax_and_service || transaction.taxAndService) > 0) && (
+                      <div className="flex justify-between w-full">
+                        <span>BIAYA ADMIN :</span><span>{rp(transaction.tax_and_service || transaction.taxAndService)}</span>
+                      </div>
+                    )
                   )}
                   <div className="border-t border-dashed border-black my-1" />
                   <div className="flex justify-between w-full font-extrabold text-[1.05em]">
@@ -855,10 +892,25 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
                       <span>Diskon</span><span>-{rp(txDiscountAmount)}</span>
                     </div>
                   )}
-                  {((transaction.tax_and_service || transaction.taxAndService) > 0) && (
-                    <div className="flex justify-between">
-                      <span>Biaya Admin</span><span>{rp(transaction.tax_and_service || transaction.taxAndService)}</span>
-                    </div>
+                  {((transaction.taxAmount !== undefined || (transaction as any).tax_amount !== undefined) || (transaction.adminFee !== undefined || (transaction as any).admin_fee !== undefined)) ? (
+                    <>
+                      {((transaction.taxAmount ?? (transaction as any).tax_amount) > 0) && (
+                        <div className="flex justify-between">
+                          <span>Pajak (PPN)</span><span>{rp(transaction.taxAmount ?? (transaction as any).tax_amount)}</span>
+                        </div>
+                      )}
+                      {((transaction.adminFee ?? (transaction as any).admin_fee) > 0) && (
+                        <div className="flex justify-between">
+                          <span>Biaya Admin</span><span>{rp(transaction.adminFee ?? (transaction as any).admin_fee)}</span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    ((transaction.tax_and_service || transaction.taxAndService) > 0) && (
+                      <div className="flex justify-between">
+                        <span>Biaya Admin</span><span>{rp(transaction.tax_and_service || transaction.taxAndService)}</span>
+                      </div>
+                    )
                   )}
                   <div className="flex justify-between font-extrabold text-[1.1em] border-t border-dashed border-black/40 pt-1 mt-1">
                     <span>Total</span><span>{rp(transaction.total)}</span>
@@ -938,8 +990,19 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
                   {txDiscountAmount > 0 && (
                     <div className="flex justify-between"><span className="text-gray-600">Diskon</span><span>-{rp(txDiscountAmount)}</span></div>
                   )}
-                  {((transaction.tax_and_service || transaction.taxAndService) > 0) && (
-                    <div className="flex justify-between"><span className="text-gray-600">Biaya Admin</span><span>{rp(transaction.tax_and_service || transaction.taxAndService)}</span></div>
+                  {((transaction.taxAmount !== undefined || (transaction as any).tax_amount !== undefined) || (transaction.adminFee !== undefined || (transaction as any).admin_fee !== undefined)) ? (
+                    <>
+                      {((transaction.taxAmount ?? (transaction as any).tax_amount) > 0) && (
+                        <div className="flex justify-between"><span className="text-gray-600">Pajak (PPN)</span><span>{rp(transaction.taxAmount ?? (transaction as any).tax_amount)}</span></div>
+                      )}
+                      {((transaction.adminFee ?? (transaction as any).admin_fee) > 0) && (
+                        <div className="flex justify-between"><span className="text-gray-600">Biaya Admin</span><span>{rp(transaction.adminFee ?? (transaction as any).admin_fee)}</span></div>
+                      )}
+                    </>
+                  ) : (
+                    ((transaction.tax_and_service || transaction.taxAndService) > 0) && (
+                      <div className="flex justify-between"><span className="text-gray-600">Biaya Admin</span><span>{rp(transaction.tax_and_service || transaction.taxAndService)}</span></div>
+                    )
                   )}
                   <div className="flex justify-between font-black text-[1.1em] border-t border-gray-300 pt-1.5 mt-1.5"><span>Total</span><span>{rp(transaction.total)}</span></div>
                   <div className="flex justify-between mt-1"><span className="text-gray-600">Bayar</span><span>{rp(txPaymentAmount || transaction.total)}</span></div>
@@ -1009,10 +1072,25 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
                       <span>Diskon</span><span>-{rp(txDiscountAmount)}</span>
                     </div>
                   )}
-                  {((transaction.tax_and_service || transaction.taxAndService) > 0) && (
-                    <div className="flex justify-between">
-                      <span>Biaya Admin</span><span>{rp(transaction.tax_and_service || transaction.taxAndService)}</span>
-                    </div>
+                  {((transaction.taxAmount !== undefined || (transaction as any).tax_amount !== undefined) || (transaction.adminFee !== undefined || (transaction as any).admin_fee !== undefined)) ? (
+                    <>
+                      {((transaction.taxAmount ?? (transaction as any).tax_amount) > 0) && (
+                        <div className="flex justify-between">
+                          <span>Pajak (PPN)</span><span>{rp(transaction.taxAmount ?? (transaction as any).tax_amount)}</span>
+                        </div>
+                      )}
+                      {((transaction.adminFee ?? (transaction as any).admin_fee) > 0) && (
+                        <div className="flex justify-between">
+                          <span>Biaya Admin</span><span>{rp(transaction.adminFee ?? (transaction as any).admin_fee)}</span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    ((transaction.tax_and_service || transaction.taxAndService) > 0) && (
+                      <div className="flex justify-between">
+                        <span>Biaya Admin</span><span>{rp(transaction.tax_and_service || transaction.taxAndService)}</span>
+                      </div>
+                    )
                   )}
                   <div className="flex justify-between font-bold text-[1.1em] pt-1 mt-1 border-t border-dashed border-gray-300">
                     <span>Total</span><span>{rp(transaction.total)}</span>

@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import ReportWhatsAppModal from './ReportWhatsAppModal';
 import ReportPrint from './ReportPrint';
 import type { MesenAeReportData } from './ReportPrint';
-import { printHtmlContent, universalPrint } from '@/lib/print-helper';
+import { printHtmlContent, universalPrint, printElementNative } from '@/lib/print-helper';
+import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -84,33 +85,40 @@ export default function ReportShareModal({ isOpen, onClose, onGenerate, storeNam
       const endStr = endDate.toISOString().split('T')[0];
       const docName = `Laporan_Keuangan_${startStr}_to_${endStr}`;
       
-      const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>${docName}</title>
-            <style>
-              #mesenae-print-section {
-                position: static !important;
-                width: 100% !important;
-                height: auto !important;
-                overflow: visible !important;
-                opacity: 1 !important;
-                visibility: visible !important;
-                display: block !important;
-                pointer-events: auto !important;
-              }
-            </style>
-          </head>
-          <body>
-            ${printElement.outerHTML}
-          </body>
-        </html>
-      `;
+      const isNative = Capacitor.isNativePlatform();
+      if (isNative) {
+        // Render ke PNG untuk native sharing/printing agar tidak berupa file HTML teks
+        await printElementNative('mesenae-print-section', docName);
+      } else {
+        // Di Web, cetak langsung raw HTML agar page-break dan margins normal
+        const htmlContent = `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>${docName}</title>
+              <style>
+                #mesenae-print-section {
+                  position: static !important;
+                  width: 100% !important;
+                  height: auto !important;
+                  overflow: visible !important;
+                  opacity: 1 !important;
+                  visibility: visible !important;
+                  display: block !important;
+                  pointer-events: auto !important;
+                }
+              </style>
+            </head>
+            <body>
+              ${printElement.outerHTML}
+            </body>
+          </html>
+        `;
 
-      const printed = await printHtmlContent(htmlContent, docName);
-      if (!printed) {
-        await universalPrint(htmlContent, docName);
+        const printed = await printHtmlContent(htmlContent, docName);
+        if (!printed) {
+          await universalPrint(htmlContent, docName);
+        }
       }
     } catch (err: any) {
       console.error('Print report failed:', err);
@@ -138,6 +146,13 @@ export default function ReportShareModal({ isOpen, onClose, onGenerate, storeNam
           `${i + 1}. *${p.name}*\n   Terjual: ${p.qty} unit | Sisa Stok: ${p.stock} pcs\n   Pendapatan: ${rp(p.revenue)} | Laba: *${rp(p.profit)}*`
         ).join('\n\n');
 
+    const taxLine = data.totalTaxAmount !== undefined && data.totalTaxAmount > 0
+      ? `\n• ${pad('Pajak (PPN)')} : ${rp(data.totalTaxAmount)}`
+      : '';
+    const adminLine = data.totalAdminFee !== undefined && data.totalAdminFee > 0
+      ? `\n• ${pad('Biaya Admin')} : ${rp(data.totalAdminFee)}`
+      : '';
+
     return `*LAPORAN ${data.storeName.toUpperCase()}*
 Periode: ${fmtDate(data.startDate)} s/d ${fmtDate(data.endDate)}
 
@@ -146,7 +161,7 @@ Periode: ${fmtDate(data.startDate)} s/d ${fmtDate(data.endDate)}
 ━━━━━━━━━━━━━━━━━━━━━━━━
 • ${pad('Jumlah Transaksi')} : ${data.txCount} transaksi
 • ${pad('Pendapatan Kotor')} : ${rp(data.totalRevenue)}
-• ${pad('Total Diskon')} : ${rp(data.totalDiscount)}
+• ${pad('Total Diskon')} : ${rp(data.totalDiscount)}${taxLine}${adminLine}
 • ${pad('Penjualan Bersih')} : ${rp(data.netSales)}
 • ${pad('HPP / Modal')} : ${rp(data.totalHpp)}
 • ${pad('Laba Kotor')} : ${rp(data.grossProfit)}

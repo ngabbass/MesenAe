@@ -473,6 +473,30 @@ export default function TransactionHistory() {
                     <span>-{rp(selectedTx.discountAmount)}</span>
                   </div>
                 )}
+
+                {((selectedTx.taxAmount !== undefined || (selectedTx as any).tax_amount !== undefined) || (selectedTx.adminFee !== undefined || (selectedTx as any).admin_fee !== undefined)) ? (
+                  <>
+                    {((selectedTx.taxAmount ?? (selectedTx as any).tax_amount) > 0) && (
+                      <div className="flex justify-between text-sm font-medium">
+                        <span className="text-muted-foreground">Pajak (PPN)</span>
+                        <span>{rp(selectedTx.taxAmount ?? (selectedTx as any).tax_amount)}</span>
+                      </div>
+                    )}
+                    {((selectedTx.adminFee ?? (selectedTx as any).admin_fee) > 0) && (
+                      <div className="flex justify-between text-sm font-medium">
+                        <span className="text-muted-foreground">Biaya Admin</span>
+                        <span>{rp(selectedTx.adminFee ?? (selectedTx as any).admin_fee)}</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  ((selectedTx.tax_and_service ?? (selectedTx as any).taxAndService ?? 0) > 0) && (
+                    <div className="flex justify-between text-sm font-medium">
+                      <span className="text-muted-foreground">Biaya Admin</span>
+                      <span>{rp(selectedTx.tax_and_service ?? (selectedTx as any).taxAndService)}</span>
+                    </div>
+                  )
+                )}
                 
                 <div className="my-3 border-t-2 border-dashed border-border/60" />
                 
