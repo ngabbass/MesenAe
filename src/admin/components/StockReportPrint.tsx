@@ -243,80 +243,84 @@ export default function StockReportPrint({ data }: StockReportPrintProps) {
         </div>
       </div>
 
-      {/* Gunakan style block yang persis sama dengan ReportPrint untuk stabilitas */}
       <style>{`
+        /* Sembunyikan cetakan di layar normal (UI Aplikasi) */
+        @media screen {
+          #mesenae-print-section { display: none !important; }
+        }
+
+        /* Tampilkan khusus di window.print (Browser) */
         @media print {
           @page { size: A4 portrait; margin: 10mm 8mm; }
-
-          html, body {
-            width: 100% !important; height: auto !important;
-            margin: 0 !important; padding: 0 !important;
-            background: white !important; position: static !important;
-            overflow: visible !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-
           body > :not(#mesenae-print-section) { display: none !important; }
-
-          #mesenae-print-section {
-            display: block !important; position: static !important;
-            width: 100% !important; visibility: visible !important; opacity: 1 !important;
+          #mesenae-print-section { 
+            display: block !important; 
+            position: static !important; 
+            width: 100% !important; 
+            visibility: visible !important; 
+            opacity: 1 !important; 
           }
+        }
 
-          .wk-pr-wrapper { display: block !important; position: static !important; width: 100% !important; }
+        /* Di bawah ini adalah gaya struktural yang diletakkan DI LUAR @media print.
+          Tujuannya agar saat Capacitor mengekstrak file ini menjadi .html murni,
+          mesin render Native tetap bisa membaca CSS-nya secara sempurna.
+        */
+        
+        .wk-pr-wrapper { display: block !important; position: static !important; width: 100% !important; }
 
-          .wk-pr-container {
-            width: 100% !important; max-width: 100% !important;
-            box-sizing: border-box !important; margin: 0 !important; padding: 0 !important;
-            font-family: Arial, Helvetica, sans-serif !important;
-            background: white !important; color: #000 !important;
-          }
+        .wk-pr-container {
+          width: 100% !important; max-width: 100% !important;
+          box-sizing: border-box !important; margin: 0 !important; padding: 0 !important;
+          font-family: Arial, Helvetica, sans-serif !important;
+          background: white !important; color: #000 !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
 
-          * { box-sizing: border-box !important; }
+        * { box-sizing: border-box !important; }
 
-          .wk-pr-header {
-            display: flex !important; justify-content: space-between !important;
-            align-items: center !important; color: white !important;
-            padding: 3mm 4mm !important; border-radius: 2mm !important;
-            margin-bottom: 3mm !important;
-            -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
-          }
-          .wk-pr-header-right { text-align: right; }
-          .wk-pr-store-name { font-size: 14pt !important; font-weight: 900 !important; margin: 0 !important; text-transform: uppercase !important; color: white !important; }
-          .wk-pr-doc-title { font-size: 7pt !important; font-weight: 600 !important; margin: 1mm 0 0 !important; opacity: 0.9 !important; color: white !important; }
-          .wk-pr-period-label { font-size: 6pt !important; opacity: 0.8 !important; margin: 0 0 0.5mm !important; text-transform: uppercase !important; color: white !important; }
-          .wk-pr-period-date { font-size: 8pt !important; font-weight: 800 !important; margin: 0 !important; color: white !important; }
+        .wk-pr-header {
+          display: flex !important; justify-content: space-between !important;
+          align-items: center !important; color: white !important;
+          padding: 3mm 4mm !important; border-radius: 2mm !important;
+          margin-bottom: 3mm !important;
+          -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+        }
+        .wk-pr-header-right { text-align: right; }
+        .wk-pr-store-name { font-size: 14pt !important; font-weight: 900 !important; margin: 0 !important; text-transform: uppercase !important; color: white !important; }
+        .wk-pr-doc-title { font-size: 7pt !important; font-weight: 600 !important; margin: 1mm 0 0 !important; opacity: 0.9 !important; color: white !important; }
+        .wk-pr-period-label { font-size: 6pt !important; opacity: 0.8 !important; margin: 0 0 0.5mm !important; text-transform: uppercase !important; color: white !important; }
+        .wk-pr-period-date { font-size: 8pt !important; font-weight: 800 !important; margin: 0 !important; color: white !important; }
 
-          .wk-pr-summary-grid {
-            display: flex !important; justify-content: space-between !important;
-            margin-bottom: 3mm !important;
-          }
-          .wk-pr-summary-card {
-            padding: 2mm 2.5mm !important; border-radius: 1.5mm !important;
-            border: 1px solid #e2e8f0 !important; border-left-width: 2.5mm !important;
-            background: #f8fafc !important;
-            -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
-          }
-          .wk-pr-summary-label { font-size: 5.5pt !important; text-transform: uppercase !important; font-weight: 800 !important; margin: 0 0 1mm !important; color: #64748b !important; line-height: 1.2 !important; }
-          .wk-pr-summary-value { font-size: 8pt !important; font-weight: 900 !important; margin: 0 !important; color: #0f172a !important; }
+        .wk-pr-summary-grid {
+          display: flex !important; justify-content: space-between !important;
+          margin-bottom: 3mm !important;
+        }
+        .wk-pr-summary-card {
+          padding: 2mm 2.5mm !important; border-radius: 1.5mm !important;
+          border: 1px solid #e2e8f0 !important; border-left-width: 2.5mm !important;
+          background: #f8fafc !important;
+          -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+        }
+        .wk-pr-summary-label { font-size: 5.5pt !important; text-transform: uppercase !important; font-weight: 800 !important; margin: 0 0 1mm !important; color: #64748b !important; line-height: 1.2 !important; }
+        .wk-pr-summary-value { font-size: 8pt !important; font-weight: 900 !important; margin: 0 !important; color: #0f172a !important; }
 
-          .wk-pr-section-title {
-            font-size: 7.5pt !important; font-weight: 800 !important;
-            margin: 0 0 1.5mm !important; text-transform: uppercase !important;
-            letter-spacing: 0.2mm !important;
-          }
+        .wk-pr-section-title {
+          font-size: 7.5pt !important; font-weight: 800 !important;
+          margin: 0 0 1.5mm !important; text-transform: uppercase !important;
+          letter-spacing: 0.2mm !important;
+        }
 
-          .wk-pr-table { width: 100% !important; border-collapse: collapse !important; font-size: 7.5pt !important; }
-          .wk-pr-table td { padding: 1mm 1.5mm !important; border-bottom: 0.5pt solid #e2e8f0 !important; color: #334155 !important; }
-          .wk-pr-table tr:last-child td { border-bottom: none !important; }
+        .wk-pr-table { width: 100% !important; border-collapse: collapse !important; font-size: 7.5pt !important; }
+        .wk-pr-table td { padding: 1mm 1.5mm !important; border-bottom: 0.5pt solid #e2e8f0 !important; color: #334155 !important; }
+        .wk-pr-table tr:last-child td { border-bottom: none !important; }
 
-          .wk-pr-footer {
-            display: flex !important; justify-content: space-between !important;
-            align-items: center !important; margin-top: 4mm !important;
-            padding-top: 2mm !important; border-top: 0.5pt solid !important;
-            font-size: 6pt !important; color: #94a3b8 !important;
-          }
+        .wk-pr-footer {
+          display: flex !important; justify-content: space-between !important;
+          align-items: center !important; margin-top: 4mm !important;
+          padding-top: 2mm !important; border-top: 0.5pt solid !important;
+          font-size: 6pt !important; color: #94a3b8 !important;
         }
       `}</style>
     </div>

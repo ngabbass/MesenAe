@@ -103,7 +103,17 @@ export async function printHtmlContent(htmlContent: string, documentName: string
       printTarget = savedFile.uri;
       console.log('[Print] Image base64 saved to cache file URI:', printTarget);
     } else {
-      printTarget = htmlContent;
+      // FIX: Simpan HTML murni sebagai file .html agar OS merendernya dengan baik (Paginasi berfungsi)
+      const fileName = `Laporan_${Date.now()}_${Math.floor(Math.random() * 1000)}.html`;
+      const savedFile = await Filesystem.writeFile({
+        path: fileName,
+        data: htmlContent,
+        directory: Directory.Cache,
+        encoding: Encoding.UTF8
+      });
+      
+      printTarget = savedFile.uri;
+      console.log('[Print] HTML content saved to cache file URI:', printTarget);
     }
 
     toast.info(`Menghubungkan ke printer untuk "${documentName}"...`);
@@ -574,4 +584,71 @@ export async function printElementNative(elementId: string, documentName: string
   `;
 
   return universalPrint(fullHtml, documentName);
+}
+
+/**
+ * printReportA4 — Khusus untuk mencetak dokumen panjang (Invoice, Laporan Keuangan, Laporan Stok)
+ * Bekerja dengan mengirimkan HTML murni, tanpa merendernya menjadi gambar.
+ */
+export async function printReportA4(elementId: string, documentName: string = 'Laporan'): Promise<boolean> {
+  const el = document.getElementById(elementId);
+  if (!el) {
+    toast.error(`Elemen dengan ID "${elementId}" tidak ditemukan.`);
+    return false;
+  }
+
+  const isNative = Capacitor.isNativePlatform();
+  toast.info(`Menyiapkan dokumen "${documentName}"...`);
+
+  // Ambil HTML mentah dari tabel/laporan
+  const rawHtml = el.outerHTML;
+
+  // Bungkus dengan struktur HTML dasar dan CSS untuk kertas A4
+  const fullHtml = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>${documentName}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          /* Pengaturan standar kertas A4 */
+          @page { size: A4; margin: 15mm; }
+          body { 
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+            padding: 0; 
+            margin: 0; 
+            background: white; 
+            color: black; 
+          }
+          /* Reset styling khusus print */
+          * { box-sizing: border-box; }
+          table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px; }
+          th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; font-size: 12px; }
+          th { background-color: #f8fafc; font-weight: bold; color: #334155; }
+          h1, h2, h3 { margin: 0 0 10px 0; color: #0f172a; }
+          .text-right { text-align: right; }
+          .text-center { text-align: center; }
+          /* Sembunyikan elemen UI seperti tombol saat dicetak */
+          .no-print, button { display: none !important; }
+        </style>
+      </head>
+      <body>
+        ${rawHtml}
+      </body>
+    </html>
+  `;
+
+  try {
+    if (isNative) {
+      // Kirim string HTML langsung ke fungsi utama
+      return await printHtmlContent(fullHtml, documentName);
+    } else {
+      // Fallback untuk web
+      return await universalPrint(fullHtml, documentName);
+    }
+  } catch (err: any) {
+    console.error('[PrintReport] Error:', err);
+    toast.error(`Gagal mencetak dokumen: ${err.message || err}`);
+    return false;
+  }
 }

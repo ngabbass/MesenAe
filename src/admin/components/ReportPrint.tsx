@@ -488,131 +488,137 @@ export default function ReportPrint({ data }: ReportPrintProps) {
       </div>
 
       <style>{`
+        /* Sembunyikan cetakan di layar normal (UI Aplikasi) */
+        @media screen {
+          #mesenae-print-section { display: none !important; }
+        }
+
+        /* Tampilkan khusus di window.print (Browser) */
         @media print {
           @page { size: A4 portrait; margin: 10mm 8mm; }
-
-          html, body {
-            width: 100% !important; height: auto !important;
-            margin: 0 !important; padding: 0 !important;
-            background: white !important; position: static !important;
-            overflow: visible !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-
           body > :not(#mesenae-print-section) { display: none !important; }
+          #mesenae-print-section { 
+            display: block !important; 
+            position: static !important; 
+            width: 100% !important; 
+            visibility: visible !important; 
+            opacity: 1 !important; 
+          }
+        }
 
-          #mesenae-print-section {
-            display: block !important; position: static !important;
-            width: 100% !important; visibility: visible !important; opacity: 1 !important;
-          }
+        /* Di bawah ini adalah gaya struktural yang diletakkan DI LUAR @media print.
+          Tujuannya agar saat Capacitor mengekstrak file ini menjadi .html murni,
+          mesin render Native tetap bisa membaca CSS-nya secara sempurna 
+          meskipun OS tidak sepenuhnya memicu mode @media print.
+        */
+        
+        .wk-pr-wrapper { display: block !important; position: static !important; width: 100% !important; }
 
-          .wk-pr-wrapper { display: block !important; position: static !important; width: 100% !important; }
+        .wk-pr-container {
+          width: 100% !important; max-width: 100% !important;
+          box-sizing: border-box !important; margin: 0 !important; padding: 0 !important;
+          font-family: Arial, Helvetica, sans-serif !important;
+          background: white !important; color: #000 !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
 
-          .wk-pr-container {
-            width: 100% !important; max-width: 100% !important;
-            box-sizing: border-box !important; margin: 0 !important; padding: 0 !important;
-            font-family: Arial, Helvetica, sans-serif !important;
-            background: white !important; color: #000 !important;
-          }
+        * { box-sizing: border-box !important; }
 
-          * { box-sizing: border-box !important; }
+        .wk-pr-header, .wk-pr-summary-grid, .wk-pr-net-box,
+        .wk-pr-charts-row, .wk-pr-footer {
+          page-break-inside: avoid !important; break-inside: avoid !important;
+        }
+        thead { display: table-header-group !important; }
+        tfoot { display: table-row-group !important; }
+        tr { page-break-inside: avoid !important; break-inside: avoid !important; }
 
-          .wk-pr-header, .wk-pr-summary-grid, .wk-pr-net-box,
-          .wk-pr-charts-row, .wk-pr-footer {
-            page-break-inside: avoid !important; break-inside: avoid !important;
-          }
-          thead { display: table-header-group !important; }
-          tfoot { display: table-row-group !important; }
-          tr { page-break-inside: avoid !important; break-inside: avoid !important; }
+        /* HEADER */
+        .wk-pr-header {
+          display: flex !important; justify-content: space-between !important;
+          align-items: center !important; color: white !important;
+          padding: 3mm 4mm !important; border-radius: 2mm !important;
+          margin-bottom: 3mm !important;
+          -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+        }
+        .wk-pr-header-right { text-align: right; }
+        .wk-pr-store-name { font-size: 14pt !important; font-weight: 900 !important; margin: 0 !important; text-transform: uppercase !important; color: white !important; }
+        .wk-pr-doc-title { font-size: 7pt !important; font-weight: 600 !important; margin: 1mm 0 0 !important; opacity: 0.9 !important; color: white !important; }
+        .wk-pr-period-label { font-size: 6pt !important; opacity: 0.8 !important; margin: 0 0 0.5mm !important; text-transform: uppercase !important; color: white !important; }
+        .wk-pr-period-date { font-size: 8pt !important; font-weight: 800 !important; margin: 0 !important; color: white !important; }
 
-          /* HEADER */
-          .wk-pr-header {
-            display: flex !important; justify-content: space-between !important;
-            align-items: center !important; color: white !important;
-            padding: 3mm 4mm !important; border-radius: 2mm !important;
-            margin-bottom: 3mm !important;
-            -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
-          }
-          .wk-pr-header-right { text-align: right; }
-          .wk-pr-store-name { font-size: 14pt !important; font-weight: 900 !important; margin: 0 !important; text-transform: uppercase !important; color: white !important; }
-          .wk-pr-doc-title { font-size: 7pt !important; font-weight: 600 !important; margin: 1mm 0 0 !important; opacity: 0.9 !important; color: white !important; }
-          .wk-pr-period-label { font-size: 6pt !important; opacity: 0.8 !important; margin: 0 0 0.5mm !important; text-transform: uppercase !important; color: white !important; }
-          .wk-pr-period-date { font-size: 8pt !important; font-weight: 800 !important; margin: 0 !important; color: white !important; }
+        /* SUMMARY GRID */
+        .wk-pr-summary-grid {
+          display: grid !important; grid-template-columns: repeat(4, 1fr) !important;
+          gap: 2mm !important; margin-bottom: 2.5mm !important;
+        }
+        .wk-pr-summary-card {
+          padding: 2mm 2.5mm !important; border-radius: 1.5mm !important;
+          border: 1px solid #e2e8f0 !important; border-left-width: 2.5mm !important;
+          background: #f8fafc !important;
+          -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+        }
+        .wk-pr-summary-label { font-size: 5.5pt !important; text-transform: uppercase !important; font-weight: 800 !important; margin: 0 0 1mm !important; color: #64748b !important; line-height: 1.2 !important; }
+        .wk-pr-summary-value { font-size: 8pt !important; font-weight: 900 !important; margin: 0 !important; color: #0f172a !important; }
 
-          /* SUMMARY GRID */
-          .wk-pr-summary-grid {
-            display: grid !important; grid-template-columns: repeat(4, 1fr) !important;
-            gap: 2mm !important; margin-bottom: 2.5mm !important;
-          }
-          .wk-pr-summary-card {
-            padding: 2mm 2.5mm !important; border-radius: 1.5mm !important;
-            border: 1px solid #e2e8f0 !important; border-left-width: 2.5mm !important;
-            background: #f8fafc !important;
-            -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
-          }
-          .wk-pr-summary-label { font-size: 5.5pt !important; text-transform: uppercase !important; font-weight: 800 !important; margin: 0 0 1mm !important; color: #64748b !important; line-height: 1.2 !important; }
-          .wk-pr-summary-value { font-size: 8pt !important; font-weight: 900 !important; margin: 0 !important; color: #0f172a !important; }
+        /* NET PROFIT BOX */
+        .wk-pr-net-box {
+          display: flex !important; justify-content: space-between !important;
+          align-items: center !important; padding: 2.5mm 3.5mm !important;
+          border-radius: 1.5mm !important; margin-bottom: 2.5mm !important;
+          border: 2px solid !important;
+          -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+        }
+        .wk-pr-net-title { font-size: 8pt !important; font-weight: 800 !important; margin: 0 0 0.5mm !important; color: #0f172a !important; }
+        .wk-pr-net-sub   { font-size: 6pt !important; color: #64748b !important; margin: 0 !important; }
+        .wk-pr-net-value { font-size: 13pt !important; font-weight: 900 !important; white-space: nowrap !important; }
 
-          /* NET PROFIT BOX */
-          .wk-pr-net-box {
-            display: flex !important; justify-content: space-between !important;
-            align-items: center !important; padding: 2.5mm 3.5mm !important;
-            border-radius: 1.5mm !important; margin-bottom: 2.5mm !important;
-            border: 2px solid !important;
-            -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
-          }
-          .wk-pr-net-title { font-size: 8pt !important; font-weight: 800 !important; margin: 0 0 0.5mm !important; color: #0f172a !important; }
-          .wk-pr-net-sub   { font-size: 6pt !important; color: #64748b !important; margin: 0 !important; }
-          .wk-pr-net-value { font-size: 13pt !important; font-weight: 900 !important; white-space: nowrap !important; }
+        /* CHARTS ROW */
+        .wk-pr-charts-row {
+          display: flex !important; gap: 3mm !important;
+          margin-bottom: 8mm !important; align-items: flex-start !important;
+        }
+        .wk-pr-chart-left { flex: 1.4 !important; min-width: 0 !important; }
+        .wk-pr-chart-right { flex: 1 !important; min-width: 0 !important; }
+        .wk-pr-section-title {
+          font-size: 7.5pt !important; font-weight: 800 !important;
+          margin: 0 0 1.5mm !important; text-transform: uppercase !important;
+          letter-spacing: 0.2mm !important;
+        }
+        .wk-pr-chart-wrap { width: 100% !important; height: 42mm !important; overflow: visible !important; }
+        .wk-pr-pie-wrap   { width: 100% !important; height: 42mm !important; overflow: visible !important; }
 
-          /* CHARTS ROW */
-          .wk-pr-charts-row {
-            display: flex !important; gap: 3mm !important;
-            margin-bottom: 8mm !important; align-items: flex-start !important;
-          }
-          .wk-pr-chart-left { flex: 1.4 !important; min-width: 0 !important; }
-          .wk-pr-chart-right { flex: 1 !important; min-width: 0 !important; }
-          .wk-pr-section-title {
-            font-size: 7.5pt !important; font-weight: 800 !important;
-            margin: 0 0 1.5mm !important; text-transform: uppercase !important;
-            letter-spacing: 0.2mm !important;
-          }
-          .wk-pr-chart-wrap { width: 100% !important; height: 42mm !important; overflow: visible !important; }
-          .wk-pr-pie-wrap   { width: 100% !important; height: 42mm !important; overflow: visible !important; }
+        /* TABLE */
+        .wk-pr-table-section { margin-bottom: 3mm !important; }
+        .wk-pr-section-title-lg {
+          font-size: 9pt !important; font-weight: 800 !important; color: #0f172a !important;
+          margin: 0 0 2mm !important; text-transform: uppercase !important;
+          border-bottom: 1.5pt solid !important; padding-bottom: 1mm !important;
+        }
+        .wk-pr-table { width: 100% !important; border-collapse: collapse !important; font-size: 7.5pt !important; }
+        .wk-pr-table th {
+          color: white !important; padding: 1.5mm 2mm !important;
+          font-weight: 700 !important; font-size: 6.5pt !important;
+          text-transform: uppercase !important;
+          -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+        }
+        .wk-pr-table td { padding: 1.5mm 2mm !important; border-bottom: 0.5pt solid #e2e8f0 !important; color: #334155 !important; }
+        .wk-pr-table tbody tr:nth-child(even) td {
+          background: #f8fafc !important;
+          -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+        }
+        .wk-pr-table tfoot td {
+          background: #f1f5f9 !important; border-top: 1.5pt solid #334155 !important;
+          font-size: 8pt !important;
+          -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+        }
 
-          /* TABLE */
-          .wk-pr-table-section { margin-bottom: 3mm !important; }
-          .wk-pr-section-title-lg {
-            font-size: 9pt !important; font-weight: 800 !important; color: #0f172a !important;
-            margin: 0 0 2mm !important; text-transform: uppercase !important;
-            border-bottom: 1.5pt solid !important; padding-bottom: 1mm !important;
-          }
-          .wk-pr-table { width: 100% !important; border-collapse: collapse !important; font-size: 7.5pt !important; }
-          .wk-pr-table th {
-            color: white !important; padding: 1.5mm 2mm !important;
-            font-weight: 700 !important; font-size: 6.5pt !important;
-            text-transform: uppercase !important;
-            -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
-          }
-          .wk-pr-table td { padding: 1.5mm 2mm !important; border-bottom: 0.5pt solid #e2e8f0 !important; color: #334155 !important; }
-          .wk-pr-table tbody tr:nth-child(even) td {
-            background: #f8fafc !important;
-            -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
-          }
-          .wk-pr-table tfoot td {
-            background: #f1f5f9 !important; border-top: 1.5pt solid #334155 !important;
-            font-size: 8pt !important;
-            -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
-          }
-
-          /* FOOTER */
-          .wk-pr-footer {
-            display: flex !important; justify-content: space-between !important;
-            align-items: center !important; margin-top: 4mm !important;
-            padding-top: 2mm !important; border-top: 0.5pt solid !important;
-            font-size: 6pt !important; color: #94a3b8 !important;
-          }
+        /* FOOTER */
+        .wk-pr-footer {
+          display: flex !important; justify-content: space-between !important;
+          align-items: center !important; margin-top: 4mm !important;
+          padding-top: 2mm !important; border-top: 0.5pt solid !important;
+          font-size: 6pt !important; color: #94a3b8 !important;
         }
       `}</style>
     </div>
