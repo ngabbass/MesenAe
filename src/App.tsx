@@ -9,7 +9,6 @@ import KitchenApp from "./kitchen/KitchenApp";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 import { useThemeColor } from "./hooks/use-theme-color";
-import { useRealtimeOrders } from "./hooks/useRealtimeOrders";
 
 //  1. IMPORT FUNGSI LISTENER DARI FILE FCM ANDA
 import { initPushListeners } from "./lib/fcm";
@@ -73,7 +72,6 @@ function GlobalNavigationHandler() {
 
 const App = () => {
   useThemeColor(); // Activate global theme color sync
-  useRealtimeOrders(); // Start global realtime order listener for authorized staff
 
   // 2. JALANKAN INISIALISASI PUSH LISTENER & NATIVE UI SAAT APP DIMULAI
   useEffect(() => {

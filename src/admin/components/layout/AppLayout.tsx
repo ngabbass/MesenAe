@@ -13,6 +13,7 @@ import { Skeleton } from '@/admin/components/SkeletonLoaders';
 import PermissionDebugger from '../PermissionDebugger';
 import { App } from '@capacitor/app';
 import { toast } from 'sonner';
+import { GlobalAdminNotifier } from './GlobalAdminNotifier';
 
 export default function AppLayout() {
   const allSettings = useDbQuery('storeSettings');
@@ -242,6 +243,7 @@ export default function AppLayout() {
 
   return (
     <div className="flex h-[100dvh] w-full bg-background overflow-hidden">
+      <GlobalAdminNotifier />
       <PermissionDebugger />
       {/* Desktop Sidebar */}
       <div className="hidden lg:block h-full shrink-0">

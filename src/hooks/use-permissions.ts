@@ -139,7 +139,7 @@ export function usePermissions() {
     return modulePerms.edit === true;
   };
 
-  return { role, isAdmin, permissions, canView, canEdit };
+  return { authData, role, isAdmin, permissions, canView, canEdit };
 }
 
 // Helper function to trigger re-render after auth update
