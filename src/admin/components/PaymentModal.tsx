@@ -107,11 +107,9 @@ export default function PaymentModal({
       if (currentMethod.category === 'e-wallet') return Math.round(baseTotalVal * 0.02);
       if (currentMethod.category === 'transfer') return 4000;
       if (currentMethod.category === 'lainnya')  return Math.round(baseTotalVal * 0.03);
-    } else if (storeSettings?.enableAdminFee) {
-      return storeSettings.adminFeeValue || 0;
     }
     return 0;
-  }, [currentMethod, baseTotal, storeSettings]);
+  }, [currentMethod, baseTotal]);
 
   const taxAndService = useMemo(() => {
     return ppnAmount + adminFee;

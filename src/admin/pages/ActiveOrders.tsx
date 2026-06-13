@@ -221,6 +221,8 @@ export default function ActiveOrders({ onSwitchToKitchen }: { onSwitchToKitchen?
 
       const txPayload = {
         tax_and_service: finalTax,
+        tax_amount: data.taxAmount,
+        admin_fee: data.adminFee,
         total: finalTotal,
         payment_method_id: primaryMethodId,
         payment_amount: finalPaymentAmount,
@@ -256,6 +258,8 @@ export default function ActiveOrders({ onSwitchToKitchen }: { onSwitchToKitchen?
         change: finalChange,
         total: finalTotal,
         taxAndService: finalTax,
+        taxAmount: data.taxAmount,
+        adminFee: data.adminFee,
         status: 'lunas',
         kitchenStatus: storeSettings?.enableKitchen === false
           ? 'diproses'
@@ -769,7 +773,7 @@ export default function ActiveOrders({ onSwitchToKitchen }: { onSwitchToKitchen?
         <PaymentModal
           open={!!payingBill}
           onOpenChange={(open) => !open && setPayingBill(null)}
-          baseTotal={payingBill.total}
+          baseTotal={Math.max(0, (payingBill.subtotal || 0) - (payingBill.discountAmount || 0))}
           initialCustomerName={payingBill.customerName || ''}
           initialTableNumber={payingBill.tableNumber || ''}
           initialRemarks={payingBill.remarks || ''}

@@ -469,26 +469,26 @@ export default function ReceiptSettings({ storeSettings, hasEditAccess }: Receip
   // Preview totals calculations
   const subtotalMinimarket = 47000;
   const taxMinimarket = storeSettings?.enableTax ? Math.round(subtotalMinimarket * (storeSettings.taxPercentage || 0) / 100) : 0;
-  const adminMinimarket = storeSettings?.enableAdminFee ? (storeSettings.adminFeeValue || 0) : 0;
+  const adminMinimarket = 0; // Admin fee only applies to Midtrans payments
   const totalMinimarket = subtotalMinimarket + taxMinimarket + adminMinimarket;
   const cashMinimarket = totalMinimarket + 3000;
   const changeMinimarket = 3000;
 
   const subtotalFnB = 35000;
   const taxFnB = storeSettings?.enableTax ? Math.round(subtotalFnB * (storeSettings.taxPercentage || 0) / 100) : 0;
-  const adminFnB = storeSettings?.enableAdminFee ? (storeSettings.adminFeeValue || 0) : 0;
+  const adminFnB = 0; // Admin fee only applies to Midtrans payments
   const totalFnB = subtotalFnB + taxFnB + adminFnB;
 
   const subtotalClassic = 26000;
   const taxClassic = storeSettings?.enableTax ? Math.round(subtotalClassic * (storeSettings.taxPercentage || 0) / 100) : 0;
-  const adminClassic = storeSettings?.enableAdminFee ? (storeSettings.adminFeeValue || 0) : 0;
+  const adminClassic = 0; // Admin fee only applies to Midtrans payments
   const totalClassic = subtotalClassic + taxClassic + adminClassic;
   const cashClassic = totalClassic + 4000;
   const changeClassic = 4000;
 
   const subtotalMinimalis = 39000;
   const taxMinimalis = storeSettings?.enableTax ? Math.round(subtotalMinimalis * (storeSettings.taxPercentage || 0) / 100) : 0;
-  const adminMinimalis = storeSettings?.enableAdminFee ? (storeSettings.adminFeeValue || 0) : 0;
+  const adminMinimalis = 0; // Admin fee only applies to Midtrans payments
   const totalMinimalis = subtotalMinimalis + taxMinimalis + adminMinimalis;
 
   const getFooterStyle = (block: string) => {

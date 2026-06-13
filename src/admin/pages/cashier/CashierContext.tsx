@@ -294,11 +294,9 @@ export const CashierProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (currentMethod.category === 'e-wallet') return Math.round(baseTotal * 0.02);
       if (currentMethod.category === 'transfer') return 4000;
       if (currentMethod.category === 'lainnya') return Math.round(baseTotal * 0.03);
-    } else if (storeSettings?.enableAdminFee) {
-      return storeSettings.adminFeeValue || 0;
     }
     return 0;
-  }, [paymentMethodId, paymentMethods, subtotal, txDiscountAmount, storeSettings]);
+  }, [paymentMethodId, paymentMethods, subtotal, txDiscountAmount]);
 
   const taxAndService = useMemo(() => {
     return ppnAmount + adminFee;

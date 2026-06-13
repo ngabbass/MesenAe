@@ -31,8 +31,6 @@ export default function StoreInfoTab({ hasEditAccess }: { hasEditAccess: boolean
   const [enableKitchen, setEnableKitchen] = useState<boolean>(true);
   const [enableTax, setEnableTax] = useState<boolean>(false);
   const [taxPercentage, setTaxPercentage] = useState<number>(0);
-  const [enableAdminFee, setEnableAdminFee] = useState<boolean>(false);
-  const [adminFeeValue, setAdminFeeValue] = useState<number>(0);
   const [enableSplitBill, setEnableSplitBill] = useState<boolean>(true);
   const [isSavingStore, setIsSavingStore] = useState(false);
   const [cropFile, setCropFile] = useState<File | null>(null);
@@ -48,8 +46,6 @@ export default function StoreInfoTab({ hasEditAccess }: { hasEditAccess: boolean
       setEnableKitchen(storeSettings.enableKitchen !== false);
       setEnableTax(storeSettings.enableTax || false);
       setTaxPercentage(storeSettings.taxPercentage || 0);
-      setEnableAdminFee(storeSettings.enableAdminFee || false);
-      setAdminFeeValue(storeSettings.adminFeeValue || 0);
       setEnableSplitBill(storeSettings.enableSplitBill !== false);
     }
   }, [storeSettings]);
@@ -132,37 +128,6 @@ export default function StoreInfoTab({ hasEditAccess }: { hasEditAccess: boolean
     }
   };
 
-  const saveAdminFeeToggle = async (checked: boolean) => {
-    if (!hasEditAccess) {
-      toast.error('Akses ditolak.');
-      return;
-    }
-    setEnableAdminFee(checked);
-    try {
-      if (storeSettings?.id) {
-        await dbUpdate('storeSettings', storeSettings.id, { enableAdminFee: checked });
-        toast.success(checked ? 'Biaya admin diaktifkan' : 'Biaya admin dinonaktifkan');
-      }
-    } catch (e: any) {
-      toast.error('Gagal memperbarui pengaturan biaya admin: ' + e.message);
-    }
-  };
-
-  const saveAdminFeeValue = async () => {
-    if (!hasEditAccess) {
-      toast.error('Akses ditolak.');
-      return;
-    }
-    try {
-      if (storeSettings?.id) {
-        await dbUpdate('storeSettings', storeSettings.id, { adminFeeValue });
-        toast.success('Nominal biaya admin berhasil disimpan');
-      }
-    } catch (e: any) {
-      toast.error('Gagal menyimpan biaya admin: ' + e.message);
-    }
-  };
-
   const saveSplitBillToggle = async (checked: boolean) => {
     if (!hasEditAccess) {
       toast.error('Akses ditolak.');
@@ -213,8 +178,6 @@ export default function StoreInfoTab({ hasEditAccess }: { hasEditAccess: boolean
     setEnableWhatsappNotification(storeSettings?.enableWhatsappNotification ?? false);
     setEnableTax(storeSettings?.enableTax ?? false);
     setTaxPercentage(storeSettings?.taxPercentage ?? 0);
-    setEnableAdminFee(storeSettings?.enableAdminFee ?? false);
-    setAdminFeeValue(storeSettings?.adminFeeValue ?? 0);
     setEnableSplitBill(storeSettings?.enableSplitBill !== false);
     setStoreDialog(true);
   };
@@ -252,8 +215,6 @@ export default function StoreInfoTab({ hasEditAccess }: { hasEditAccess: boolean
         enableKitchen,
         enableTax,
         taxPercentage,
-        enableAdminFee,
-        adminFeeValue,
         enableSplitBill
       };
       
@@ -475,34 +436,6 @@ export default function StoreInfoTab({ hasEditAccess }: { hasEditAccess: boolean
                     />
                   </div>
                   <Button onClick={saveTaxPercentage} className="h-9 px-3 shrink-0 shadow-sm">Simpan %</Button>
-                </div>
-              )}
-
-              {/* Biaya Admin */}
-              <div className="p-4 border-t border-border flex items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold">Aktifkan Biaya Admin</p>
-                  <p className="text-xs text-muted-foreground leading-snug">Menambahkan biaya admin flat ke total pesanan (manual atau online).</p>
-                </div>
-                <Switch
-                  disabled={!hasEditAccess}
-                  checked={enableAdminFee}
-                  onCheckedChange={(checked) => saveAdminFeeToggle(checked)}
-                />
-              </div>
-              {enableAdminFee && (
-                <div className="p-4 border-t border-border flex items-end gap-3 bg-muted/20">
-                  <div className="flex-1 max-w-[200px] space-y-1.5">
-                    <Label className="text-xs font-medium">Nominal Biaya Admin (Rp)</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={adminFeeValue || ''}
-                      onChange={e => setAdminFeeValue(Number(e.target.value))}
-                      className="bg-background h-9"
-                    />
-                  </div>
-                  <Button onClick={saveAdminFeeValue} className="h-9 px-3 shrink-0 shadow-sm">Simpan Rp</Button>
                 </div>
               )}
             </SettingCard>
