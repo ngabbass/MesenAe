@@ -67,7 +67,7 @@ const WALLETS: WalletOption[] = [
     snapKey: 'gopay',
     bg: 'bg-[#00AED6]/10 dark:bg-[#00AED6]/20',
     borderColor: 'hover:border-[#00AED6] focus:ring-[#00AED6]/20',
-    svg: <img src="/ico/gopay.png" alt="GoPay" className="w-full h-full object-contain p-1.5 drop-shadow-sm" />,
+    svg: <img src="/ico/gopay.svg" alt="GoPay" className="w-full h-full object-contain p-1.5 drop-shadow-sm" />,
     desc: 'Bayar instan via aplikasi Gojek atau GoPay',
     tag: 'Populer',
   },
@@ -77,7 +77,7 @@ const WALLETS: WalletOption[] = [
     snapKey: 'shopeepay',
     bg: 'bg-[#EE4D2D]/10 dark:bg-[#EE4D2D]/20',
     borderColor: 'hover:border-[#EE4D2D] focus:ring-[#EE4D2D]/20',
-    svg: <img src="/ico/shopeepay.png" alt="ShopeePay" className="w-full h-full object-contain p-1.5 drop-shadow-sm" />,
+    svg: <img src="/ico/shopeepay.svg" alt="ShopeePay" className="w-full h-full object-contain p-1.5 drop-shadow-sm" />,
     desc: 'Buka aplikasi Shopee untuk konfirmasi PIN',
   },
   {
@@ -86,7 +86,7 @@ const WALLETS: WalletOption[] = [
     snapKey: 'ovo',
     bg: 'bg-[#4C3493]/10 dark:bg-[#4C3493]/20',
     borderColor: 'hover:border-[#4C3493] focus:ring-[#4C3493]/20',
-    svg: <img src="/ico/ovo.png" alt="OVO" className="w-full h-full object-contain p-1.5 drop-shadow-sm" />,
+    svg: <img src="/ico/ovo.svg" alt="OVO" className="w-full h-full object-contain p-1.5 drop-shadow-sm" />,
     desc: 'Masukkan nomor HP yang terdaftar di OVO',
   },
   {
@@ -95,7 +95,7 @@ const WALLETS: WalletOption[] = [
     snapKey: 'dana',
     bg: 'bg-[#118EEA]/10 dark:bg-[#118EEA]/20',
     borderColor: 'hover:border-[#118EEA] focus:ring-[#118EEA]/20',
-    svg: <img src="/ico/dana.png" alt="DANA" className="w-full h-full object-contain p-1.5 drop-shadow-sm" />,
+    svg: <img src="/ico/dana.svg" alt="DANA" className="w-full h-full object-contain p-1.5 drop-shadow-sm" />,
     desc: 'Scan barcode via QRIS menggunakan aplikasi DANA',
     tag: 'QRIS',
   },
@@ -105,7 +105,7 @@ const WALLETS: WalletOption[] = [
     snapKey: 'linkaja',
     bg: 'bg-[#E22B29]/10 dark:bg-[#E22B29]/20',
     borderColor: 'hover:border-[#E22B29] focus:ring-[#E22B29]/20',
-    svg: <img src="/ico/linkaja.png" alt="LinkAja" className="w-full h-full object-contain p-1.5 drop-shadow-sm" />,
+    svg: <img src="/ico/linkaja.svg" alt="LinkAja" className="w-full h-full object-contain p-1.5 drop-shadow-sm" />,
     desc: 'Bayar menggunakan saldo LinkAja',
   },
 ];
@@ -265,7 +265,7 @@ export function EWalletModal({
                 
                 <div className="bg-muted rounded-xl p-4 border mb-4 flex flex-col items-center text-center gap-2 shadow-inner">
                   {paymentMethod.iconName ? (
-                    <img src={`/ico/${paymentMethod.iconName}.png`} alt={paymentMethod.bankName} className="h-10 object-contain mb-1 drop-shadow-sm" />
+                    <img src={`/ico/${paymentMethod.iconName}.svg`} alt={paymentMethod.bankName} className="h-10 object-contain mb-1 drop-shadow-sm" />
                   ) : (
                     <Wallet className="w-10 h-10 text-primary mb-1 opacity-80 drop-shadow-sm" />
                   )}

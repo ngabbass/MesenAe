@@ -17,11 +17,11 @@ import { Haptics } from '@capacitor/haptics';
 import jsQR from 'jsqr';
 
 const PM_CAT_ICONS: Record<string, React.ReactNode> = {
-  tunai: <img src="/ico/tunai.png" alt="tunai" className="w-5 h-5 object-contain inline-block" />, 
-  transfer: <img src="/ico/transfer.png" alt="transfer" className="w-5 h-5 object-contain inline-block" />, 
-  'e-wallet': <img src="/ico/ewallet.png" alt="e-wallet" className="w-5 h-5 object-contain inline-block" />, 
-  qris: <img src="/ico/qris.png" alt="qris" className="w-5 h-5 object-contain inline-block" />, 
-  lainnya: <img src="/ico/lainnya.png" alt="lainnya" className="w-5 h-5 object-contain inline-block" />,
+  tunai: <img src="/ico/tunai.svg" alt="tunai" className="w-5 h-5 object-contain inline-block" />, 
+  transfer: <img src="/ico/transfer.svg" alt="transfer" className="w-5 h-5 object-contain inline-block" />, 
+  'e-wallet': <img src="/ico/ewallet.svg" alt="e-wallet" className="w-5 h-5 object-contain inline-block" />, 
+  qris: <img src="/ico/qris.svg" alt="qris" className="w-5 h-5 object-contain inline-block dark:invert" />, 
+  lainnya: <img src="/ico/lainnya.svg" alt="lainnya" className="w-5 h-5 object-contain inline-block" />,
 };
 
 function SortablePaymentMethodItem({ id, pm, isLast, hasEditAccess, onEdit, onDelete }: { id: string, pm: PaymentMethod, isLast: boolean, hasEditAccess: boolean, onEdit: () => void, onDelete: () => void }) {
@@ -47,7 +47,7 @@ function SortablePaymentMethodItem({ id, pm, isLast, hasEditAccess, onEdit, onDe
       )}
       <span className="text-base w-6 flex items-center justify-center">
         {pm.provider === 'manual' && pm.iconName ? (
-          <img src={`/ico/${pm.iconName}.png`} alt={pm.iconName} className="w-5 h-5 object-contain inline-block" />
+          <img src={`/ico/${pm.iconName}.svg`} alt={pm.iconName} className="w-5 h-5 object-contain inline-block" />
         ) : (
           PM_CAT_ICONS[pm.category] ?? '•'
         )}
@@ -830,7 +830,7 @@ export default function PaymentMethodsTab({ hasEditAccess }: { hasEditAccess: bo
                         title={ico.toUpperCase()}
                       >
                         <img 
-                          src={`/ico/${ico}.png`} 
+                          src={`/ico/${ico}.svg`} 
                           alt={ico} 
                           className="w-12 h-12 object-contain" 
                           onError={(e) => e.currentTarget.style.display = 'none'} 

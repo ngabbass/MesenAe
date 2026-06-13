@@ -141,11 +141,11 @@ export function QrisCard({ qrisString, onCanvasRendered, className }: Props) {
       try {
         const logo = new Image();
         logo.crossOrigin = "anonymous";
-        logo.src = "/ico/qris.png"; 
+        logo.src = "/ico/qris.svg"; 
 
         const gpn = new Image();
         gpn.crossOrigin = "anonymous";
-        gpn.src = "/ico/gpn.png"; 
+        gpn.src = "/ico/gpn.svg"; 
         
         await Promise.all([
           new Promise((resolve, reject) => {
@@ -158,11 +158,17 @@ export function QrisCard({ qrisString, onCanvasRendered, className }: Props) {
           }).catch(() => {})
         ]);
 
-        const logoTargetHeight = 60;
-        const logoRatio = logo.width / logo.height;
+        const gpnHeight = 40;
+        const gpnRatio = gpn.width / gpn.height || 0.788;
+        const gpnWidth = gpn.width > 0 ? (gpnHeight * gpnRatio) : (gpnHeight * 0.788);
+        const gpnX = width - 25 - gpnWidth;
+        const gpnY = 24;
+
+        const logoRatio = logo.width / logo.height || 2.70978;
+        const logoTargetHeight = 32;
         const logoTargetWidth = logoTargetHeight * logoRatio;
         const logoX = 25;
-        const logoY = 15;
+        const logoY = 32;
 
         const tempCanvas = document.createElement("canvas");
         tempCanvas.width = logo.width;
@@ -187,11 +193,6 @@ export function QrisCard({ qrisString, onCanvasRendered, className }: Props) {
         }
 
         if (gpn.width > 0) {
-          const gpnHeight = 34;
-          const gpnRatio = gpn.width / gpn.height || 0.788;
-          const gpnWidth = gpnHeight * gpnRatio;
-          const gpnX = width - 25 - gpnWidth;
-          const gpnY = 28;
 
           const gpnCanvas = document.createElement("canvas");
           gpnCanvas.width = gpn.width;

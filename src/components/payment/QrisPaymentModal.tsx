@@ -168,7 +168,7 @@ export function QrisPaymentModal({
               <div className="absolute -right-8 -top-8 w-24 h-24 bg-white/10 rounded-full blur-2xl pointer-events-none" />
               <DialogHeader className="relative z-10">
                 <DialogTitle className="text-white text-base font-bold flex items-center gap-2 tracking-tight">
-                  <img src="/ico/qris.png" alt="QRIS" className="w-auto h-5 object-contain rounded bg-white px-1" />
+                  <img src="/ico/qris.svg" alt="QRIS" className="w-auto h-5 object-contain rounded bg-white px-1" />
                   QRIS Manual
                 </DialogTitle>
                 <DialogDescription className="text-white/80 text-xs mt-0.5">
@@ -224,7 +224,7 @@ export function QrisPaymentModal({
               <div className="absolute -right-8 -top-8 w-24 h-24 bg-white/10 rounded-full blur-2xl pointer-events-none" />
               <DialogHeader className="relative z-10">
                 <DialogTitle className="text-white text-base font-bold flex items-center gap-2">
-                  <img src="/ico/qris.png" alt="QRIS" className="w-auto h-5 object-contain rounded bg-white px-1" />
+                  <img src="/ico/qris.svg" alt="QRIS" className="w-auto h-5 object-contain rounded bg-white px-1" />
                   Pembayaran QRIS
                 </DialogTitle>
                 <DialogDescription className="text-white/80 text-xs mt-0.5">

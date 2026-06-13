@@ -180,7 +180,7 @@ export function BankTransferModal({
                 
                 <div className="bg-muted rounded-xl p-4 border mb-4 flex flex-col items-center text-center gap-2 shadow-inner">
                   {paymentMethod.iconName ? (
-                    <img src={`/ico/${paymentMethod.iconName}.png`} alt={paymentMethod.bankName} className="h-10 object-contain mb-1" />
+                    <img src={`/ico/${paymentMethod.iconName}.svg`} alt={paymentMethod.bankName} className="h-10 object-contain mb-1" />
                   ) : (
                     <Landmark className="w-10 h-10 text-primary mb-1 opacity-80" />
                   )}
@@ -216,7 +216,7 @@ export function BankTransferModal({
                         style={{ backgroundColor: bank.color }}
                       >
                         {['bca', 'bni', 'bri', 'mandiri', 'seabank'].includes(bank.id) ? (
-                          <img src={`/ico/${bank.id}.png`} alt={bank.name} className="w-full h-full object-contain p-1 bg-white" />
+                          <img src={`/ico/${bank.id}.svg`} alt={bank.name} className="w-full h-full object-contain p-1 bg-white" />
                         ) : (
                           bank.abbr
                         )}

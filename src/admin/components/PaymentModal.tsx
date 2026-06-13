@@ -223,11 +223,11 @@ export default function PaymentModal({
 
   // ── Icons & colors ───────────────────────────────────────────
   const ICONS: Record<string, React.ReactNode> = {
-    tunai: <img src="/ico/tunai.png" alt="Tunai" className="w-5 h-5 object-contain" />,
-    transfer: <img src="/ico/transfer.png" alt="Transfer" className="w-5 h-5 object-contain" />,
-    'e-wallet': <img src="/ico/ewallet.png" alt="E-Wallet" className="w-5 h-5 object-contain" />,
-    qris: <img src="/ico/qris.png" alt="QRIS" className="w-5 h-5 object-contain" />,
-    lainnya: <img src="/ico/lainnya.png" alt="Lainnya" className="w-5 h-5 object-contain" />,
+    tunai: <img src="/ico/tunai.svg" alt="Tunai" className="w-5 h-5 object-contain" />,
+    transfer: <img src="/ico/transfer.svg" alt="Transfer" className="w-5 h-5 object-contain" />,
+    'e-wallet': <img src="/ico/ewallet.svg" alt="E-Wallet" className="w-5 h-5 object-contain" />,
+    qris: <img src="/ico/qris.svg" alt="QRIS" className="w-5 h-5 object-contain dark:invert" />,
+    lainnya: <img src="/ico/lainnya.svg" alt="Lainnya" className="w-5 h-5 object-contain" />,
   };
   const COLORS: Record<string, string> = {
     tunai: 'text-green-600 bg-green-50 dark:bg-green-950/30',
@@ -279,7 +279,7 @@ export default function PaymentModal({
                     >
                       <span className={cn('p-1.5 rounded-lg shrink-0 flex items-center justify-center', isSelected ? COLORS[pm.category] || 'text-primary bg-primary/10' : 'text-muted-foreground bg-muted')}>
                         {pm.provider === 'manual' && pm.iconName ? (
-                          <img src={`/ico/${pm.iconName}.png`} alt={pm.iconName} className="w-5 h-5 object-contain" />
+                          <img src={`/ico/${pm.iconName}.svg`} alt={pm.iconName} className="w-5 h-5 object-contain" />
                         ) : (
                           ICONS[pm.category] ?? <CreditCard className="w-5 h-5" />
                         )}
