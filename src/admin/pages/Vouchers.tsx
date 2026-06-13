@@ -1,7 +1,8 @@
 import { useDbQuery, dbInsert, dbUpdate, dbDelete } from '@/hooks/db-hooks';
 import { type Voucher, type Product } from '@/hooks/db-hooks';
 import { useState } from 'react';
-import { Plus, Ticket, Edit2, Trash2, Tag, Percent, Banknote, ListFilter, Sparkles, Eye, EyeOff } from 'lucide-react';
+import { Plus, Ticket, Edit2, Trash2, Tag, Percent, ListFilter, Sparkles, Eye, EyeOff } from 'lucide-react';
+import { RpIcon } from '@/components/ui/RpIcon';
 import { usePermissions } from '@/hooks/use-permissions';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -171,7 +172,7 @@ export default function Vouchers() {
                       {v.type === 'percentage' ? (
                         <Percent className="w-8 h-8 mb-1 opacity-50" strokeWidth={2} />
                       ) : (
-                        <Banknote className="w-8 h-8 mb-1 opacity-50" strokeWidth={2} />
+                        <RpIcon className="w-8 h-8 mb-1 opacity-50" strokeWidth={2} />
                       )}
                       <h4 className="text-2xl font-black tracking-tighter text-center leading-none">
                         {v.type === 'percentage' ? `${v.value ?? 0}%` : FORMAT_IDR(v.value ?? 0).replace('Rp', '')}

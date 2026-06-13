@@ -163,28 +163,13 @@ export default function UsersTab({ hasEditAccess }: { hasEditAccess: boolean }) 
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="space-y-1.5">
-              <Label className="text-xs flex items-center gap-1.5"><Users className="w-3.5 h-3.5" />Username Login</Label>
-              <Input value={userUsername} onChange={e => setUserUsername(e.target.value)} placeholder="contoh: kasir1" />
-            </div>
-
-            <div className="space-y-1.5">
               <Label className="text-xs">Nama Lengkap</Label>
               <Input value={userName} onChange={e => setUserName(e.target.value)} placeholder="contoh: Budi Santoso" />
             </div>
+
             <div className="space-y-1.5">
-              <Label className="text-xs">No WhatsApp</Label>
-              <Input 
-                value={userWhatsapp} 
-                onChange={e => {
-                  const val = e.target.value.replace(/[^0-9]/g, '');
-                  if (val.length <= 12) {
-                    setUserWhatsapp(val);
-                  }
-                }} 
-                type="tel"
-                inputMode="numeric"
-                placeholder="085..." 
-              />
+              <Label className="text-xs flex items-center gap-1.5"><Users className="w-3.5 h-3.5" />Username Login</Label>
+              <Input value={userUsername} onChange={e => setUserUsername(e.target.value)} placeholder="contoh: kasir1" />
             </div>
 
             <div className="space-y-1.5">
@@ -208,6 +193,22 @@ export default function UsersTab({ hasEditAccess }: { hasEditAccess: boolean }) 
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">No WhatsApp</Label>
+              <Input 
+                value={userWhatsapp} 
+                onChange={e => {
+                  const val = e.target.value.replace(/[^0-9]/g, '');
+                  if (val.length <= 12) {
+                    setUserWhatsapp(val);
+                  }
+                }} 
+                type="tel"
+                inputMode="numeric"
+                placeholder="085..." 
+              />
             </div>
 
             <div className="space-y-1.5">

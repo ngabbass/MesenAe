@@ -1,5 +1,6 @@
 import React from 'react';
 import { useDbQuery } from '@/hooks/db-hooks';
+import { Store, ChefHat, Database } from 'lucide-react';
 
 export default function LoginLeftColumn() {
   const storeSettingsList = useDbQuery<any>('storeSettings') ?? [];
@@ -46,12 +47,12 @@ export default function LoginLeftColumn() {
         {/* Daftar Fitur / Value Proposition */}
         <div className="space-y-4 text-left">
           {[
-            { icon: '💼', title: 'Admin & Kasir POS', desc: 'Kelola laporan penjualan, stok, supplier, dan kasir penjualan' },
-            { icon: '🍳', title: 'Layar Dapur (KDS)', desc: 'Monitor antrean pesanan masakan real-time untuk chef' },
-            { icon: '☁️', title: 'Firebase Firestore', desc: 'Integrasi cloud database aman, real-time tersinkron, dan tangguh' },
+            { icon: <Store className="w-5 h-5 text-blue-500" />, title: 'Admin & Kasir POS', desc: 'Kelola laporan penjualan, stok, supplier, dan kasir penjualan' },
+            { icon: <ChefHat className="w-5 h-5 text-orange-500" />, title: 'Layar Dapur (KDS)', desc: 'Monitor antrean pesanan masakan real-time untuk chef' },
+            { icon: <Database className="w-5 h-5 text-emerald-500" />, title: 'Database Real-time', desc: 'Penyimpanan data aman dengan sinkronisasi instan' },
           ].map((item, idx) => (
             <div key={idx} className="flex items-start gap-4 bg-background/40 hover:bg-background/80 transition-colors rounded-xl p-4 border border-border shadow-sm">
-              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-lg shrink-0 border border-border/50">
+              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0 border border-border/50">
                 {item.icon}
               </div>
               <div>

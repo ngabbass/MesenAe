@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Banknote, Building2, Wallet, QrCode, LayoutGrid, CreditCard, User, Hash, Check, X } from 'lucide-react';
+import { Building2, Wallet, QrCode, LayoutGrid, CreditCard, User, Hash, Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useDbQuery } from '@/hooks/db-hooks';

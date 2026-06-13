@@ -3,7 +3,8 @@ import type { QRISData, ConvertOptions } from "../../../lib/qris-dinamis/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Banknote, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
+import { RpIcon } from "@/components/ui/RpIcon";
 
 interface Props {
   parsed: QRISData;
@@ -51,7 +52,7 @@ export function ConvertForm({ parsed, onConvert, disabled }: Props) {
     <form onSubmit={handleSubmit} className="rounded-xl border border-border/50 bg-background overflow-hidden shadow-sm">
       <div className="px-5 py-4 border-b border-border/50 bg-muted/30">
         <h2 className="text-sm font-semibold flex items-center gap-2">
-          <Banknote className="w-4 h-4 text-primary" />
+          <RpIcon className="w-4 h-4 text-primary" />
           Konversi ke QRIS Dinamis
         </h2>
       </div>

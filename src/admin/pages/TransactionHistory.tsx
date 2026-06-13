@@ -3,7 +3,8 @@ import { type Transaction, type TransactionItemRecord } from '@/hooks/db-hooks';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { format, startOfDay, endOfDay } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
-import { ArrowLeft, Search, Receipt as ReceiptIcon, Calendar, ChevronRight, ShoppingBag, CalendarIcon, X, Trash2, ShoppingCart, TrendingUp, Filter, User } from 'lucide-react';
+import { ArrowLeft, Search, Calendar, ChevronRight, ShoppingBag, CalendarIcon, X, Trash2, ShoppingCart, TrendingUp, Filter, User } from 'lucide-react';
+import { RpIcon } from '@/components/ui/RpIcon';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -268,7 +269,7 @@ export default function TransactionHistory() {
                 <p className="text-2xl font-black text-foreground">{filtered.length} <span className="text-sm font-semibold text-muted-foreground">Nota</span></p>
               </div>
               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <ReceiptIcon className="w-6 h-6 text-primary" />
+                <RpIcon className="w-6 h-6 text-primary" />
               </div>
             </CardContent>
           </Card>
@@ -323,7 +324,7 @@ export default function TransactionHistory() {
                           ? 'bg-warning/10 text-warning border-warning/20 group-hover:bg-warning/20' 
                           : 'bg-primary/5 text-primary border-primary/10 group-hover:bg-primary/10'
                       )}>
-                        {tx.status === 'belum lunas' ? <ShoppingCart className="w-5 h-5" /> : <ReceiptIcon className="w-5 h-5" />}
+                        {tx.status === 'belum lunas' ? <ShoppingCart className="w-5 h-5" /> : <RpIcon className="w-5 h-5" />}
                       </div>
                       
                       <div className="flex-1 min-w-0 flex flex-col justify-center">
@@ -388,7 +389,7 @@ export default function TransactionHistory() {
         <SheetContent side="bottom" className="h-[85vh] rounded-t-[2rem] max-w-lg md:max-w-xl mx-auto flex flex-col p-0 border-border/60 shadow-2xl">
           <SheetHeader className="shrink-0 px-6 py-5 border-b border-border/50 bg-muted/10">
             <SheetTitle className="text-left font-extrabold flex items-center gap-2">
-              <ReceiptIcon className="w-5 h-5 text-primary" /> Detail Transaksi
+              <RpIcon className="w-5 h-5 text-primary" /> Detail Transaksi
             </SheetTitle>
           </SheetHeader>
           
@@ -532,7 +533,7 @@ export default function TransactionHistory() {
                   </Button>
                 ) : (
                   <Button className="w-full h-12 rounded-xl font-bold shadow-md active:scale-[0.98] transition-all" onClick={openReceipt}>
-                    <ReceiptIcon className="w-4 h-4 mr-2" />
+                    <RpIcon className="w-4 h-4 mr-2" />
                     Lihat & Cetak Struk Digital
                   </Button>
                 )}

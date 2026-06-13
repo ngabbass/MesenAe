@@ -1,8 +1,9 @@
 import { useDbQuery, dbInsert, dbUpdate, dbDelete, type Expense, type ExpenseCategory, type PaymentMethod } from '@/hooks/db-hooks';
 import { useState, useMemo } from 'react';
 import {
-  Wallet, Plus, Edit2, Trash2, Calendar as CalendarIcon, Receipt, FilterX, Tag, Loader2
+  Wallet, Plus, Edit2, Trash2, Calendar as CalendarIcon, FilterX, Tag, Loader2
 } from 'lucide-react';
+import { RpIcon } from '@/components/ui/RpIcon';
 import ExpenseCategories from '../components/ExpenseCategories';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -235,7 +236,7 @@ export default function ExpensesPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-warning/8 to-warning/3 pointer-events-none" />
         <CardContent className="p-4 flex items-center gap-4 relative">
           <div className="w-12 h-12 rounded-2xl bg-warning/15 text-warning flex items-center justify-center shrink-0 shadow-sm">
-            <Receipt className="w-6 h-6" />
+            <RpIcon className="w-6 h-6" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-bold mb-0.5">

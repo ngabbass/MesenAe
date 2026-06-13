@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { Section, SettingCard, SettingRow } from '../Settings';
-import { Loader2, FileDown, FileUp, FileSpreadsheet, UploadCloud } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import JsonIcon from '@/components/ui/JsonIcon';
+import ExcelIcon from '@/components/ui/ExcelIcon';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { exportAllDataToJSON, importAllDataFromJSON } from '@/lib/backup-utils';
@@ -45,13 +47,13 @@ export default function DataBackupTab({ hasEditAccess }: { hasEditAccess: boolea
                     }
                   } finally { setIsExporting(false); }
                 }} disabled={isExporting}>
-                  {isExporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileDown className="w-4 h-4 mr-2 text-blue-500" />}
+                  {isExporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <JsonIcon className="w-4 h-4 mr-2 text-amber-500" />}
                   Export JSON
                 </Button>
               </SettingRow>
               <SettingRow label="Restore Database (JSON)" description="Pulihkan seluruh data dari berkas JSON cadangan. Peringatan: aksi ini menimpa data saat ini." last>
                 <Button variant="outline" size="sm" onClick={() => allDataInputRef.current?.click()} disabled={isImportingAll || !hasEditAccess}>
-                  {isImportingAll ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileUp className="w-4 h-4 mr-2 text-rose-500" />}
+                  {isImportingAll ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <JsonIcon className="w-4 h-4 mr-2 text-rose-500" />}
                   Restore JSON
                 </Button>
                 <input type="file" ref={allDataInputRef} className="hidden" accept=".json" onChange={async (e) => {
@@ -78,13 +80,13 @@ export default function DataBackupTab({ hasEditAccess }: { hasEditAccess: boolea
             <SettingCard>
               <SettingRow label="Download Template Produk" description="Unduh format Excel kosong untuk mengisi data produk baru secara massal.">
                 <Button variant="outline" size="sm" onClick={downloadProductTemplate}>
-                  <FileSpreadsheet className="w-4 h-4 mr-2 text-emerald-500" />
+                  <ExcelIcon className="w-4 h-4 mr-2 text-[#0f773d]" />
                   Template Excel
                 </Button>
               </SettingRow>
               <SettingRow label="Import Produk Masal" description="Unggah berkas produk massal dari template Excel yang telah diisi." last>
                 <Button variant="outline" size="sm" onClick={() => prodInputRef.current?.click()} disabled={isImportingProd || !hasEditAccess}>
-                  {isImportingProd ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <UploadCloud className="w-4 h-4 mr-2 text-primary" />}
+                  {isImportingProd ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ExcelIcon className="w-4 h-4 mr-2 text-blue-600" />}
                   Upload Produk
                 </Button>
                 <input type="file" ref={prodInputRef} className="hidden" accept=".xlsx,.xls" onChange={async (e) => {

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, FileText, MessageCircle, RotateCcw, Loader2, Share2, ChevronRight, Package, AlertTriangle, Calendar as CalendarIcon } from 'lucide-react';
+import { X, RotateCcw, Loader2, Share2, ChevronRight, Package, AlertTriangle, Calendar as CalendarIcon } from 'lucide-react';
+import PdfIcon from '@/components/ui/PdfIcon';
+import WhatsAppIcon from '@/components/ui/WhatsAppIcon';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import ReportWhatsAppModal from './ReportWhatsAppModal';
@@ -298,7 +300,7 @@ _MesenAe — Aplikasi Kasir UMKM_`.trim();
                   {loading ? (
                     <><Loader2 className="w-4 h-4 animate-spin" /> Memproses...</>
                   ) : (
-                    <><FileText className="w-4 h-4" /> Buat Laporan Stok</>
+                    <><PdfIcon className="w-4 h-4 text-white" /> Buat Laporan Stok</>
                   )}
                 </Button>
               </div>
@@ -327,11 +329,11 @@ _MesenAe — Aplikasi Kasir UMKM_`.trim();
                     disabled={printing}
                     className="w-full flex items-center gap-3 p-3.5 rounded-xl border-2 border-primary/20 bg-primary/5 dark:bg-primary/10 hover:bg-primary/10 dark:hover:bg-primary/20 transition-colors disabled:opacity-50"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-red-500 flex items-center justify-center shrink-0">
                       {printing ? (
-                        <Loader2 className="w-5 h-5 text-primary-foreground animate-spin" />
+                        <Loader2 className="w-5 h-5 text-white animate-spin" />
                       ) : (
-                        <FileText className="w-5 h-5 text-primary-foreground" />
+                        <PdfIcon className="w-6 h-6 text-white" />
                       )}
                     </div>
                     <div className="flex-1 text-left">
@@ -352,7 +354,7 @@ _MesenAe — Aplikasi Kasir UMKM_`.trim();
                     className="w-full flex items-center gap-3 p-3.5 rounded-xl border-2 border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20 dark:border-emerald-900/40 hover:bg-emerald-100 dark:hover:bg-emerald-950/40 transition-colors disabled:opacity-50"
                   >
                     <div className="w-10 h-10 rounded-xl bg-[#25d366] flex items-center justify-center shrink-0">
-                      <MessageCircle className="w-5 h-5 text-white" />
+                      <WhatsAppIcon className="w-5 h-5 text-white" />
                     </div>
                     <div className="flex-1 text-left">
                       <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400">Kirim via WhatsApp</p>

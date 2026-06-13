@@ -1,7 +1,8 @@
 import { useDbQuery } from '@/hooks/db-hooks';
 import type { Expense } from '@/hooks/db-hooks';
 import { useState, useMemo, useEffect } from 'react';
-import { BarChart3, TrendingUp, ShoppingCart, Package, DollarSign, ArrowDown, ArrowUp, Minus, Plus, Share2, Filter } from 'lucide-react';
+import { BarChart3, TrendingUp, ShoppingCart, Package, ArrowDown, ArrowUp, Minus, Plus, Share2, Filter } from 'lucide-react';
+import { RpIcon } from '@/components/ui/RpIcon';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -450,7 +451,7 @@ export default function Laporan() {
               </div>
               <div className="w-px h-10 bg-border/50" />
               <div className="text-center flex-1">
-                <DollarSign className="w-4 h-4 mx-auto text-accent mb-1" />
+                <RpIcon className="w-4 h-4 mx-auto text-accent mb-1" />
                 <p className="text-sm font-bold">{rp(netProfit)}</p>
                 <p className="text-[10px] text-muted-foreground">Laba Bersih</p>
               </div>
@@ -462,7 +463,7 @@ export default function Laporan() {
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-1.5">
-              <DollarSign className="w-4 h-4" />
+              <RpIcon className="w-4 h-4" />
               Laba Rugi
             </CardTitle>
           </CardHeader>

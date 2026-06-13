@@ -130,7 +130,9 @@ export function OtherPaymentModal({
         <div className="bg-gradient-to-br from-slate-700 to-slate-900 p-5 text-white">
           <DialogHeader>
             <DialogTitle className="text-white text-lg font-bold flex items-center gap-2">
-              <LayoutGrid className="w-5 h-5" />
+              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shrink-0 p-1.5 shadow-sm">
+                <img src="/ico/lainnya.svg" alt="Lainnya" className="w-full h-full object-contain" />
+              </div>
               Metode Pembayaran Lainnya
             </DialogTitle>
             <DialogDescription className="text-white/80 text-sm mt-1">

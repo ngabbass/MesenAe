@@ -15,6 +15,18 @@ const isActiveOrder = (order: any) => {
   return isUnpaid || isPaidButCooking || isPaidRetailWeb;
 };
 
+const isRecentOrder = (order: any) => {
+  if (!order.date) return false;
+  try {
+    const orderTime = new Date(order.date).getTime();
+    const now = Date.now();
+    // Toleransi 10 menit untuk perbedaan waktu jam perangkat kasir vs server
+    return Math.abs(now - orderTime) < 10 * 60 * 1000;
+  } catch (e) {
+    return false;
+  }
+};
+
 export function useRealtimeOrders() {
   const { authData } = usePermissions();
   const isInitialLoad = useRef(true);
@@ -67,8 +79,8 @@ export function useRealtimeOrders() {
                   const txCashier = String(data.cashier_name || data.cashierName || '').trim().toLowerCase();
                   const currentCashier = String(currentCashierName).trim().toLowerCase();
                   
-                  // Hanya proses jika bukan kasir yang sama yang membuat, dan merupakan pesanan aktif
-                  if (txCashier !== currentCashier && isActiveOrder(data)) {
+                  // Hanya proses jika bukan kasir yang sama yang membuat, merupakan pesanan aktif, dan merupakan pesanan baru (recent)
+                  if (txCashier !== currentCashier && isActiveOrder(data) && isRecentOrder(data)) {
                     newOrders.push({ id, ...data });
                   }
                 }

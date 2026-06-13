@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
+import { RpIcon } from '@/components/ui/RpIcon';
 import { id } from 'date-fns/locale';
 
 // --- Icons ---
@@ -9,8 +10,7 @@ import {
   Package, 
   BarChart3, 
   TrendingUp, 
-  AlertTriangle, 
-  Receipt, 
+  AlertTriangle,
   ChevronRight, 
   ClipboardList, 
   Clock, 
@@ -390,7 +390,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-3.5">
             <h2 className="text-sm font-bold text-foreground flex items-center gap-2 tracking-tight">
               <div className="p-1.5 bg-primary/10 rounded-lg">
-                <Receipt className="w-4 h-4 text-primary" />
+                <RpIcon className="w-4 h-4 text-primary" />
               </div>
               Transaksi Terakhir
             </h2>
@@ -415,7 +415,7 @@ export default function Dashboard() {
                       
                       {/* Ikon dengan efek hover bg transition */}
                       <div className="w-10 h-10 rounded-xl bg-primary/5 text-primary border border-primary/10 flex items-center justify-center shrink-0 transition-colors group-hover:bg-primary/10">
-                        <Receipt className="w-4 h-4" />
+                        <RpIcon className="w-4 h-4" />
                       </div>
                       
                       <div className="flex-1 min-w-0">

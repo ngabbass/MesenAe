@@ -11,6 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { usePermissions } from '@/hooks/use-permissions';
 import { printHtmlContent, universalPrint } from '@/lib/print-helper';
 import { cn, generateTableId } from '@/lib/utils';
+import { TakeawayIcon } from '@/components/ui/TakeawayIcon';
 
 // Transparent pixel untuk "melubangi" ruang di QR Code
 const transparentPixel = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
@@ -543,7 +544,7 @@ export default function QrCodeMenu() {
             <CardContent className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300">
-                  🛍️
+                  <TakeawayIcon className="w-5 h-5" />
                 </div>
                 <div>
                   <h4 className="font-bold text-xs">Bawa Pulang (Take Away)</h4>

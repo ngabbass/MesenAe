@@ -95,7 +95,7 @@ export function QrisPaymentModal({
       await MidtransService.loadSnapScript();
       const token = await MidtransService.createTransactionToken({
         transaction_details: {
-          order_id: orderId || `MA-QRIS-${Date.now()}`,
+          order_id: orderId ? `${orderId}-${Date.now()}` : `MA-QRIS-${Date.now()}`,
           gross_amount: Math.round(amount),
         },
         item_details: [
@@ -168,7 +168,9 @@ export function QrisPaymentModal({
               <div className="absolute -right-8 -top-8 w-24 h-24 bg-white/10 rounded-full blur-2xl pointer-events-none" />
               <DialogHeader className="relative z-10">
                 <DialogTitle className="text-white text-base font-bold flex items-center gap-2 tracking-tight">
-                  <img src="/ico/qris.svg" alt="QRIS" className="w-auto h-5 object-contain rounded bg-white px-1" />
+                  <div className="bg-white rounded-md px-1.5 py-0.5 flex items-center justify-center shrink-0 shadow-sm h-6">
+                    <img src="/ico/qris.svg" alt="QRIS" className="h-4.5 w-auto object-contain" />
+                  </div>
                   QRIS Manual
                 </DialogTitle>
                 <DialogDescription className="text-white/80 text-xs mt-0.5">
@@ -224,7 +226,9 @@ export function QrisPaymentModal({
               <div className="absolute -right-8 -top-8 w-24 h-24 bg-white/10 rounded-full blur-2xl pointer-events-none" />
               <DialogHeader className="relative z-10">
                 <DialogTitle className="text-white text-base font-bold flex items-center gap-2">
-                  <img src="/ico/qris.svg" alt="QRIS" className="w-auto h-5 object-contain rounded bg-white px-1" />
+                  <div className="bg-white rounded-md px-1.5 py-0.5 flex items-center justify-center shrink-0 shadow-sm h-6">
+                    <img src="/ico/qris.svg" alt="QRIS" className="h-4.5 w-auto object-contain" />
+                  </div>
                   Pembayaran QRIS
                 </DialogTitle>
                 <DialogDescription className="text-white/80 text-xs mt-0.5">

@@ -7,7 +7,6 @@ import {
   Store, 
   CreditCard,
   Printer, 
-  Receipt, 
   Database, 
   Paintbrush, 
   Users,
@@ -18,6 +17,7 @@ import {
   Shield,
   ArrowLeft
 } from 'lucide-react';
+import { RpIcon } from '@/components/ui/RpIcon';
 
 // --- Hooks & Utils ---
 import { usePermissions } from '@/hooks/use-permissions';
@@ -80,7 +80,7 @@ const TABS: TabItem[] = [
     id: 'struk',       
     label: 'Pengaturan Struk', 
     description: 'Kustomisasi layout & logo struk.',
-    icon: <Receipt className="w-5 h-5 sm:w-6 sm:h-6" />,
+    icon: <RpIcon className="w-5 h-5 sm:w-6 sm:h-6" />,
     colorTheme: {
       iconBg: 'bg-blue-500/10 dark:bg-blue-500/20',
       iconText: 'text-blue-600 dark:text-blue-500',
@@ -371,36 +371,42 @@ export default function Settings() {
             slideDirection === 'left' ? "animate-settings-slide-next" : "animate-settings-slide-prev"
           )}
         >
-          {/* Tombol Kembali ke Menu (Di Atas Kiri) */}
-          <div className="flex items-center justify-start w-full">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => changeTab('menu')}
-              className="h-9 px-3 rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-accent/40 gap-2 transition-all"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Kembali ke Menu
-            </Button>
-          </div>
+          {/* Header Row: Tombol Kembali (Kiri) & Header Tab (Tengah) */}
+          <div className="relative w-full select-none bg-transparent pb-2 flex items-center justify-center min-h-[50px]">
+            {/* Tombol Kembali (Kiri Mutlak) */}
+            <div className="absolute left-0 flex items-center h-full">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => changeTab('menu')}
+                className="h-9 px-2 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-accent/40 gap-1.5 transition-all"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span className="hidden sm:inline">Kembali ke Menu</span>
+                <span className="inline sm:hidden">Kembali</span>
+              </Button>
+            </div>
 
-          {/* Centered Tab Header (Rapi, Sempit & Borderless) */}
-          <div className="w-full select-none bg-transparent pb-1 flex flex-col items-center">
-            
-            <h1 className="text-sm sm:text-base font-extrabold text-foreground tracking-tight flex items-center justify-center gap-2">
-              <span className={cn(
-                "w-7 h-7 rounded-lg flex items-center justify-center shadow-sm shrink-0",
-                activeTabItem?.colorTheme.iconBg,
-                activeTabItem?.colorTheme.iconText
-              )}>
-                <span className="scale-75 flex items-center justify-center">{activeTabItem?.icon}</span>
-              </span>
-              <span>{activeTabItem?.label}</span>
-            </h1>
-            
-            <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 text-center max-w-[280px] sm:max-w-[360px] leading-relaxed">
-              {activeTabItem?.description}
-            </p>
+            {/* Header di Tengah */}
+            <div className="flex flex-col items-center justify-center text-center px-24 sm:px-36">
+              <h1 className="text-sm sm:text-base font-extrabold text-foreground tracking-tight flex items-center justify-center gap-2">
+                <span className={cn(
+                  "w-7 h-7 rounded-lg flex items-center justify-center shadow-sm shrink-0",
+                  activeTabItem?.colorTheme.iconBg,
+                  activeTabItem?.colorTheme.iconText
+                )}>
+                  <span className="scale-75 flex items-center justify-center">{activeTabItem?.icon}</span>
+                </span>
+                <span>{activeTabItem?.label}</span>
+              </h1>
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 leading-relaxed hidden sm:block max-w-[280px]">
+                {activeTabItem?.description}
+              </p>
+            </div>
+          </div>
+          
+          {/* Wrapper untuk Slider Row agar terpusat di bawah header */}
+          <div className="w-full flex flex-col items-center pb-2">
 
             {/* Navigation Slider Row (Di bawah header, ada tombol kanan kiri dan indicators) */}
             <div className="flex items-center justify-between w-full max-w-xs px-4 mt-1">
