@@ -407,6 +407,7 @@ export default function AppSidebar({ isMobile = false }: AppSidebarProps) {
         <button 
           onClick={() => {
             localStorage.removeItem('admin_auth');
+            sessionStorage.removeItem('cashier_session_state');
             window.location.href = '/login';
           }}
           title={isCollapsed ? "Keluar Aplikasi" : undefined}

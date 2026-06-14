@@ -219,7 +219,7 @@ export function EWalletModal({
   };
 
   // Tutup dialog utama saat confirmOpen agar tidak stacking
-  const dialogOpen = isOpen && !snapActive && !confirmOpen;
+  const dialogOpen = isOpen && !snapActive;
 
   return (
     <>
@@ -240,7 +240,10 @@ export function EWalletModal({
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                 )}
-                ⚡ Pembayaran Digital
+                <div className="bg-white rounded-md px-1.5 py-0.5 flex items-center justify-center shrink-0 shadow-sm h-6">
+                  <img src="/ico/ewallet.svg" alt="E-Wallet" className="h-4 w-auto object-contain" />
+                </div>
+                Pembayaran Digital
               </DialogTitle>
               <DialogDescription className="text-white/80 text-xs mt-0.5">
                 Konfirmasi nominal tagihan & pilih metode dompet digital

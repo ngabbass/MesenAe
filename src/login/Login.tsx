@@ -97,11 +97,13 @@ export default function SharedLogin() {
       });
 
       if (role === 'admin') {
+        sessionStorage.removeItem('cashier_session_state');
         localStorage.setItem('admin_auth', authData);
         notifyAuthChange(); // Notify permission hook to re-render
         toast.success(`Selamat datang, Administrator ${user.username}!`);
         navigate('/admin/');
       } else if (role === 'user') {
+        sessionStorage.removeItem('cashier_session_state');
         localStorage.setItem('admin_auth', authData);
         notifyAuthChange(); // Notify permission hook to re-render
         toast.success(`Selamat datang, Staff ${user.username}!`);

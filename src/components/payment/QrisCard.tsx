@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { parseQRIS } from "@/lib/qris-dinamis/index";
+import { Loader2 } from "lucide-react";
 
 interface Props {
   qrisString: string;
@@ -9,11 +10,12 @@ interface Props {
 }
 
 export function QrisCard({ qrisString, onCanvasRendered, className }: Props) {
-  const cardCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [renderedSrc, setRenderedSrc] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!cardCanvasRef.current || !qrisString) return;
-    const canvas = cardCanvasRef.current;
+    if (!qrisString) return;
+    
+    const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
@@ -193,7 +195,6 @@ export function QrisCard({ qrisString, onCanvasRendered, className }: Props) {
         }
 
         if (gpn.width > 0) {
-
           const gpnCanvas = document.createElement("canvas");
           gpnCanvas.width = gpn.width;
           gpnCanvas.height = gpn.height;
@@ -273,8 +274,10 @@ export function QrisCard({ qrisString, onCanvasRendered, className }: Props) {
         const qrInnerY = qrBoxY + (qrBoxSize - qrInnerSize) / 2;
         ctx.drawImage(qrVirtualCanvas, qrInnerX, qrInnerY, qrInnerSize, qrInnerSize);
 
+        const dataUrl = canvas.toDataURL("image/png", 1.0);
+        setRenderedSrc(dataUrl);
         if (onCanvasRendered) {
-          onCanvasRendered(canvas.toDataURL("image/png", 1.0));
+          onCanvasRendered(dataUrl);
         }
 
       } catch (error) {
@@ -283,12 +286,25 @@ export function QrisCard({ qrisString, onCanvasRendered, className }: Props) {
     };
 
     renderAssets();
-  }, [qrisString, onCanvasRendered]);
+  }, [qrisString]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!renderedSrc) {
+    return (
+      <div 
+        className={`bg-white border border-border/80 flex flex-col items-center justify-center gap-3 animate-pulse shadow-sm ${className || 'w-full max-w-[300px] aspect-[400/580] rounded-[20px]'}`}
+        style={{ contentVisibility: 'auto' }}
+      >
+        <Loader2 className="w-8 h-8 text-primary/40 animate-spin" />
+        <p className="text-[10px] text-muted-foreground font-semibold">Menyiapkan QRIS...</p>
+      </div>
+    );
+  }
 
   return (
-    <canvas 
-      ref={cardCanvasRef} 
+    <img 
+      src={renderedSrc} 
       className={className || "w-full max-w-[300px] h-auto rounded-[20px] shadow-sm"} 
+      alt="QRIS Card" 
     />
   );
 }

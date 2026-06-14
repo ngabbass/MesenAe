@@ -239,6 +239,7 @@ export default function AppTopbar({ isFullscreen, onToggleFullscreen, onToggleMo
 
   const handleLogout = () => {
     localStorage.removeItem('admin_auth');
+    sessionStorage.removeItem('cashier_session_state');
     navigate('/login');
   };
 

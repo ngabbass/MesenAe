@@ -51,10 +51,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     // Check if session has expired
     if (auth.expiresAt && Date.now() > auth.expiresAt) {
       localStorage.removeItem('admin_auth');
+      sessionStorage.removeItem('cashier_session_state');
       return <Navigate to="/login" replace />;
     }
   } catch (e) {
     localStorage.removeItem('admin_auth');
+    sessionStorage.removeItem('cashier_session_state');
     return <Navigate to="/login" replace />;
   }
   

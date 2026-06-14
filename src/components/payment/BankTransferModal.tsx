@@ -142,7 +142,7 @@ export function BankTransferModal({
   };
 
   // Tutup dialog utama saat confirmOpen agar tidak stacking
-  const dialogOpen = isOpen && !confirmOpen;
+  const dialogOpen = isOpen;
 
   return (
     <>
@@ -158,7 +158,10 @@ export function BankTransferModal({
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                 )}
-                🏦 Transfer Bank
+                <div className="bg-white rounded-md px-1.5 py-0.5 flex items-center justify-center shrink-0 shadow-sm h-6">
+                  <img src="/ico/transfer.svg" alt="Transfer" className="h-4 w-auto object-contain" />
+                </div>
+                Transfer Bank
               </DialogTitle>
               <DialogDescription className="text-white/80 text-xs mt-0.5">
                 Pilih bank dan ikuti instruksi pembayaran

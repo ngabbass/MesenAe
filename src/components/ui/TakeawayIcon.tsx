@@ -18,22 +18,18 @@ export const TakeawayIcon = React.forwardRef<SVGSVGElement, LucideProps>(
         className={`lucide lucide-takeaway-bag ${className}`}
         {...props}
       >
-        {/* Bentuk utama kantong kertas (meruncing ke bawah) */}
-        <path d="M6 6h12l-1.5 16h-9L6 6Z" />
+        {/* Gagang kantong */}
+        <path d="M9 8V5a3 3 0 0 1 6 0v3" />
         
-        {/* Gagang kantong di bagian atas */}
-        <path d="M9 6V4a3 3 0 0 1 6 0v2" />
+        {/* Badan kantong (trapesium terbalik dengan sudut bawah membulat) */}
+        <path d="M5 8h14l-1 12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2Z" />
         
-        {/* Detail visual (sendok dan garpu) di dalam kantong agar jelas itu Makanan */}
-        {/* Gagang sendok & garpu */}
-        <path d="M10 11v6" />
-        <path d="M14 11v6" />
+        {/* Logo Makanan (Mangkuk) di depan kantong */}
+        <path d="M9 14h6a3 3 0 0 1-6 0Z" />
         
-        {/* Kepala garpu */}
-        <path d="M9 11c0 .5.5 1 1 1h0c.5 0 1-.5 1-1" />
-        
-        {/* Kepala sendok */}
-        <path d="M13.5 11.5a1.5 1.5 0 1 0 1 0v-.5Z" />
+        {/* Uap panas */}
+        <path d="M11 11v1" />
+        <path d="M13 11v1" />
       </svg>
     );
   }

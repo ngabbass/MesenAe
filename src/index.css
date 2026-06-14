@@ -453,6 +453,19 @@ body.is-native ol[tabindex="-1"] {
   bottom: calc(var(--sab) + 8px) !important;
 }
 
+/* -- MIDTRANS SNAP WINDOW SAFE AREA OVERRIDES -- */
+body.is-native #snap-midtrans,
+body.is-native .snap-midtrans,
+body.is-native div[id*="snap-midtrans"],
+body.is-native iframe[src*="midtrans.com"],
+body.is-native iframe[id*="snap-midtrans"] {
+  top: var(--sat) !important;
+  bottom: var(--sab) !important;
+  height: calc(100% - var(--sat) - var(--sab)) !important;
+  box-sizing: border-box !important;
+}
+
+
 /* -- KITCHEN APP NATIVE OVERRIDES -- */
 body.is-native .kitchen-topbar {
   padding-top: calc(var(--sat) + 0.75rem) !important;

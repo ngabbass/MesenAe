@@ -167,28 +167,48 @@ export const CashierProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // ==========================================
   // States
   // ==========================================
+  // Load initial values from cache
+  const cachedState = useMemo(() => {
+    try {
+      const cached = sessionStorage.getItem('cashier_session_state');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed.payments) {
+          parsed.payments = parsed.payments.map((p: any) => ({
+            ...p,
+            date: new Date(p.date)
+          }));
+        }
+        return parsed;
+      }
+    } catch (e) {
+      console.warn('Failed to load cached cashier session:', e);
+    }
+    return null;
+  }, []);
+
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [editingTxId, setEditingTxId] = useState<number | null>(null);
+  const [cart, setCart] = useState<CartItem[]>(() => cachedState?.cart || []);
+  const [editingTxId, setEditingTxId] = useState<number | null>(() => cachedState?.editingTxId ?? null);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [midtransPaymentType, setMidtransPaymentType] = useState<'qris' | 'transfer' | 'e-wallet' | 'lainnya' | null>(null);
-  const [txDiscountType, setTxDiscountType] = useState<'percentage' | 'nominal' | null>(null);
-  const [txDiscountValue, setTxDiscountValue] = useState('');
+  const [txDiscountType, setTxDiscountType] = useState<'percentage' | 'nominal' | null>(() => cachedState?.txDiscountType ?? null);
+  const [txDiscountValue, setTxDiscountValue] = useState(() => cachedState?.txDiscountValue || '');
   const [discountDialogOpen, setDiscountDialogOpen] = useState(false);
   const [tempDiscountType, setTempDiscountType] = useState<'percentage' | 'nominal'>('nominal');
   const [tempDiscountValue, setTempDiscountValue] = useState('');
   const [paymentMethodId, setPaymentMethodId] = useState<string>('');
   const [paymentAmount, setPaymentAmount] = useState('');
-  const [payments, setPayments] = useState<{ methodId: number; methodName: string; amount: number; date: Date }[]>([]);
+  const [payments, setPayments] = useState<{ methodId: number; methodName: string; amount: number; date: Date }[]>(() => cachedState?.payments || []);
   const [isQuickAdding, setIsQuickAdding] = useState(false);
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [lastTransaction, setLastTransaction] = useState<Transaction | null>(null);
   const [lastTxItems, setLastTxItems] = useState<TransactionItemRecord[]>([]);
-  const [customerName, setCustomerName] = useState('');
-  const [tableNumber, setTableNumber] = useState('Bawa Pulang');
-  const [remarks, setRemarks] = useState('');
+  const [customerName, setCustomerName] = useState(() => cachedState?.customerName || '');
+  const [tableNumber, setTableNumber] = useState(() => cachedState?.tableNumber || 'Bawa Pulang');
+  const [remarks, setRemarks] = useState(() => cachedState?.remarks || '');
   const [scannerOpen, setScannerOpen] = useState(false);
   const [openBillsOpen, setOpenBillsOpen] = useState(false);
   const [editingItemNotes, setEditingItemNotes] = useState<number | null>(null);
@@ -197,8 +217,8 @@ export const CashierProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelTargetTx, setCancelTargetTx] = useState<Transaction | null>(null);
   const [scanInput, setScanInput] = useState('');
-  const [voucherCode, setVoucherCode] = useState('');
-  const [voucherApplied, setVoucherApplied] = useState<Voucher | null>(null);
+  const [voucherCode, setVoucherCode] = useState(() => cachedState?.voucherCode || '');
+  const [voucherApplied, setVoucherApplied] = useState<Voucher | null>(() => cachedState?.voucherApplied || null);
   const [voucherLoading, setVoucherLoading] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutDataCache, setCheckoutDataCache] = useState<any>(null);
@@ -318,6 +338,38 @@ export const CashierProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // ==========================================
   // Effects
   // ==========================================
+  // Save state to sessionStorage
+  useEffect(() => {
+    try {
+      const stateToCache = {
+        cart,
+        editingTxId,
+        customerName,
+        tableNumber,
+        remarks,
+        txDiscountType,
+        txDiscountValue,
+        payments,
+        voucherCode,
+        voucherApplied,
+      };
+      sessionStorage.setItem('cashier_session_state', JSON.stringify(stateToCache));
+    } catch (e) {
+      console.warn('Failed to cache cashier session:', e);
+    }
+  }, [
+    cart,
+    editingTxId,
+    customerName,
+    tableNumber,
+    remarks,
+    txDiscountType,
+    txDiscountValue,
+    payments,
+    voucherCode,
+    voucherApplied,
+  ]);
+
   // Focus SKU / Barcode input on scanInput cleared
   useEffect(() => {
     if (scanInput === '' && scanInputRef.current) {
@@ -383,6 +435,8 @@ export const CashierProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setTableNumber('Bawa Pulang');
     setRemarks('');
     setIsQuickAdding(false);
+    setVoucherCode('');
+    setVoucherApplied(null);
   };
 
   const addToCart = (product: Product, variants?: { groupName: string; optionName: string; price: number }[], notes?: string) => {

@@ -156,7 +156,7 @@ export function QrisPaymentModal({
   };
 
   const isManual = paymentMethod?.provider === 'manual' && paymentMethod?.qrisString;
-  const dialogOpen = isOpen && !snapActive && !confirmOpen && !previewOpen;
+  const dialogOpen = isOpen && !snapActive;
 
   return (
     <>
@@ -169,7 +169,7 @@ export function QrisPaymentModal({
               <DialogHeader className="relative z-10">
                 <DialogTitle className="text-white text-base font-bold flex items-center gap-2 tracking-tight">
                   <div className="bg-white rounded-md px-1.5 py-0.5 flex items-center justify-center shrink-0 shadow-sm h-6">
-                    <img src="/ico/qris.svg" alt="QRIS" className="h-4.5 w-auto object-contain" />
+                    <img src="/ico/qris.svg" alt="QRIS" className="h-4 w-auto object-contain" />
                   </div>
                   QRIS Manual
                 </DialogTitle>
@@ -227,7 +227,7 @@ export function QrisPaymentModal({
               <DialogHeader className="relative z-10">
                 <DialogTitle className="text-white text-base font-bold flex items-center gap-2">
                   <div className="bg-white rounded-md px-1.5 py-0.5 flex items-center justify-center shrink-0 shadow-sm h-6">
-                    <img src="/ico/qris.svg" alt="QRIS" className="h-4.5 w-auto object-contain" />
+                    <img src="/ico/qris.svg" alt="QRIS" className="h-4 w-auto object-contain" />
                   </div>
                   Pembayaran QRIS
                 </DialogTitle>
