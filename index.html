@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  
+  <title>Workspace MesenAe</title>
+  <meta name="description"
+    content="Dashboard kasir POS untuk UMKM. Terhubung langsung dengan database cloud secara real-time. Kelola penjualan, stok, dan laporan dengan mudah." />
+  <meta name="keywords" content="aplikasi kasir, POS UMKM, kasir UMKM, aplikasi penjualan, manajemen stok, laporan penjualan, MesenAe, Workspace MesenAe" />
+  <meta name="author" content="Ahmad Basith" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#3B82F6" />
+  
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <meta name="msapplication-TileImage" content="/mstile-150x150.png" />
+  
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Workspace MesenAe - Dashboard Kasir UMKM" />
+  <meta property="og:description" content="Dashboard kasir POS untuk UMKM. Terhubung langsung dengan database cloud secara real-time. Kelola penjualan, stok, dan laporan dengan mudah." />
+  <meta property="og:image" content="/Workspace.png" />
+  <meta property="og:image:width" content="600" />
+  <meta property="og:image:height" content="600" />
+  <meta property="og:site_name" content="Workspace MesenAe" />
+  <meta property="og:locale" content="id_ID" />
+  
+  <meta property="twitter:card" content="summary" />
+  <meta property="twitter:title" content="Workspace MesenAe - Dashboard Kasir UMKM" />
+  <meta property="twitter:description" content="Dashboard kasir POS untuk UMKM. Terhubung langsung dengan database cloud." />
+  <meta property="twitter:image" content="/Workspace.png" />
+  
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Workspace MesenAe" />
+  
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="application-name" content="Workspace MesenAe" />
+  <meta name="msapplication-TileColor" content="#3B82F6" />
+  <meta name="msapplication-config" content="none" />
+  
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Workspace MesenAe",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web Browser, Android, iOS",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "IDR"
+    },
+    "description": "Dashboard kasir POS untuk UMKM. Terhubung langsung dengan database cloud secara real-time. Kelola penjualan, stok, dan laporan dengan mudah.",
+    "image": "/Workspace.png",
+    "author": {
+      "@type": "Person",
+      "name": "Ahmad Basith"
+    },
+    "inLanguage": "id-ID",
+    "featureList": [
+      "Kasir POS Cloud",
+      "Manajemen Produk",
+      "Manajemen Stok",
+      "Laporan Penjualan Real-time"
+    ]
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  
+  <style>
+    /* Warna awal sebelum React mount — cocok untuk light & dark mode.
+       Capacitor menampilkan splash screen native sehingga warna ini
+       hanya terlihat di web browser (bukan di dalam app Android/iOS). */
+    html, body {
+      background-color: #0f172a;
+    }
+    /* Override di light mode: pakai putih bersih */
+    @media (prefers-color-scheme: light) {
+      html:not(.dark), body:not(.dark) {
+        background-color: #f8fafc;
+      }
+    }
+  </style>
+
+  <script>
+    // Inline dark mode initialization tetap dipertahankan
+    // agar Tailwind bisa langsung membaca class 'dark' saat React merender UI
+    (function() {
+      const savedTheme = localStorage.getItem('mesenae-theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
+</html>
